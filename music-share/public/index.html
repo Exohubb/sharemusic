@@ -13,7 +13,7 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
       min-height: 100vh;
       color: #f9fafb;
@@ -22,7 +22,6 @@
       overflow-x: hidden;
     }
 
-    /* Navbar */
     .navbar {
       background: rgba(15, 23, 42, 0.9);
       backdrop-filter: blur(20px);
@@ -73,15 +72,8 @@
       font-weight: 600;
       color: #4ade80;
       white-space: nowrap;
-      animation: pulse-badge 2s infinite;
     }
 
-    @keyframes pulse-badge {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    /* Main Content */
     .main {
       flex: 1;
       max-width: 1400px;
@@ -90,7 +82,6 @@
       width: 100%;
     }
 
-    /* Hero Section */
     .hero {
       text-align: center;
       padding: 20px 16px 32px;
@@ -127,7 +118,6 @@
       line-height: 1.6;
     }
 
-    /* Grid Layout */
     .grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
@@ -141,7 +131,6 @@
       }
     }
 
-    /* Card */
     .card {
       background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(24px);
@@ -186,7 +175,6 @@
       font-weight: 600;
     }
 
-    /* Form Fields */
     .field {
       margin-bottom: 16px;
     }
@@ -221,7 +209,6 @@
       background: rgba(15, 23, 42, 0.95);
     }
 
-    /* Button */
     .btn {
       width: 100%;
       padding: 14px 20px;
@@ -279,7 +266,6 @@
       gap: 6px;
     }
 
-    /* Rooms Section */
     .rooms-header {
       display: flex;
       align-items: center;
@@ -321,11 +307,6 @@
       border-radius: 999px;
     }
 
-    .rooms-list::-webkit-scrollbar-thumb:hover {
-      background: rgba(148, 163, 184, 0.7);
-    }
-
-    /* Room Card */
     .room-card {
       background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(15, 23, 42, 0.95));
       border: 1.5px solid rgba(148, 163, 184, 0.3);
@@ -333,10 +314,10 @@
       padding: 16px;
       cursor: pointer;
       transition: all 0.2s ease;
-      animation: slideInRight 0.4s ease-out;
+      animation: slideIn 0.4s ease-out;
     }
 
-    @keyframes slideInRight {
+    @keyframes slideIn {
       from {
         opacity: 0;
         transform: translateX(-20px);
@@ -398,10 +379,10 @@
       height: 8px;
       border-radius: 50%;
       background: currentColor;
-      animation: pulse-dot 1.5s infinite;
+      animation: pulse 1.5s infinite;
     }
 
-    @keyframes pulse-dot {
+    @keyframes pulse {
       0%, 100% {
         opacity: 1;
         transform: scale(1);
@@ -455,7 +436,6 @@
       opacity: 0.7;
     }
 
-    /* Empty State */
     .empty-state {
       text-align: center;
       padding: 48px 24px;
@@ -481,7 +461,6 @@
       opacity: 0.7;
     }
 
-    /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -568,7 +547,6 @@
       margin-top: 20px;
     }
 
-    /* Loading Indicator */
     .loading-indicator {
       display: inline-block;
       width: 14px;
@@ -583,7 +561,6 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
       .navbar-inner {
         padding: 12px 16px;
@@ -593,31 +570,12 @@
         font-size: 1.1rem;
       }
 
-      .brand-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 1.1rem;
-      }
-
-      .badge-rooms {
-        font-size: 0.75rem;
-        padding: 6px 12px;
-      }
-
       .main {
         padding: 24px 16px 32px;
       }
 
-      .hero {
-        padding: 16px 12px 24px;
-      }
-
       .card {
         padding: 20px;
-      }
-
-      .card-title {
-        font-size: 1.15rem;
       }
 
       .modal-actions {
@@ -626,38 +584,27 @@
     }
 
     @media (max-width: 480px) {
-      .hero-title {
-        font-size: 1.75rem;
-      }
-
       .room-main {
         flex-direction: column;
         gap: 8px;
-      }
-
-      .room-status {
-        align-self: flex-start;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Navbar -->
   <nav class="navbar">
     <div class="navbar-inner">
       <div class="brand">
         <div class="brand-icon">🎵</div>
         <span>Music Sync</span>
       </div>
-      <div class="badge-rooms" id="globalRoomsBadge">
+      <div class="badge-rooms">
         <span id="globalRoomsCount">0</span> active rooms
       </div>
     </div>
   </nav>
 
-  <!-- Main Content -->
   <main class="main">
-    <!-- Hero -->
     <section class="hero">
       <h1 class="hero-title">🎧 Listen Together, Perfectly Synced</h1>
       <p class="hero-subtitle">
@@ -665,9 +612,7 @@
       </p>
     </section>
 
-    <!-- Grid -->
     <div class="grid">
-      <!-- Create Room Card -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">🎙️ Create Room</div>
@@ -707,7 +652,6 @@
         </form>
       </div>
 
-      <!-- Available Rooms Card -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">🏠 Available Rooms</div>
@@ -725,7 +669,6 @@
     </div>
   </main>
 
-  <!-- Join Room Modal -->
   <div class="modal-backdrop" id="joinModalBackdrop">
     <div class="modal">
       <div class="modal-header">
@@ -781,20 +724,12 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    // ═══════════════════════════════════════════════════════════
-    // SOCKET.IO CONNECTION
-    // ═══════════════════════════════════════════════════════════
-
     const socket = io({
       transports: ['websocket', 'polling'],
-      upgrade: true,
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
+      reconnectionDelay: 1000
     });
 
-    // DOM Elements
     const createForm = document.getElementById('createRoomForm');
     const createBtn = document.getElementById('createBtn');
     const createError = document.getElementById('createError');
@@ -814,10 +749,6 @@
     let selectedRoomCode = null;
     let isCreatingRoom = false;
 
-    // ═══════════════════════════════════════════════════════════
-    // UTILITY FUNCTIONS
-    // ═══════════════════════════════════════════════════════════
-
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text || '';
@@ -831,10 +762,6 @@
     function clearError(element) {
       element.textContent = '';
     }
-
-    // ═══════════════════════════════════════════════════════════
-    // CREATE ROOM
-    // ═══════════════════════════════════════════════════════════
 
     createForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -866,20 +793,13 @@
         }
 
         console.log('✅ Room created:', response.roomCode);
-
-        // Redirect to host panel
         window.location.href = `/host.html?room=${encodeURIComponent(response.roomCode)}`;
       });
     });
 
-    // ═══════════════════════════════════════════════════════════
-    // RENDER ROOMS LIST (INSTANT UPDATES)
-    // ═══════════════════════════════════════════════════════════
-
     function renderRooms(rooms) {
       const count = rooms.length;
 
-      // Update counts
       roomsCount.textContent = count === 1 ? '1 room' : `${count} rooms`;
       globalRoomsCount.textContent = count;
 
@@ -894,7 +814,6 @@
         return;
       }
 
-      // Sort by most recent
       const sortedRooms = rooms.slice().sort((a, b) => b.createdAt - a.createdAt);
 
       const roomsHtml = sortedRooms.map(room => {
@@ -933,7 +852,6 @@
 
       roomsContainer.innerHTML = `<div class="rooms-list">${roomsHtml}</div>`;
 
-      // Attach click handlers
       document.querySelectorAll('.room-card').forEach(card => {
         card.addEventListener('click', () => {
           const code = card.getAttribute('data-room-code');
@@ -942,10 +860,6 @@
         });
       });
     }
-
-    // ═══════════════════════════════════════════════════════════
-    // JOIN MODAL
-    // ═══════════════════════════════════════════════════════════
 
     function openJoinModal(roomCode, roomName) {
       selectedRoomCode = roomCode;
@@ -996,31 +910,23 @@
         return;
       }
 
-      // Redirect to listener page
       window.location.href = `/listener.html?room=${encodeURIComponent(selectedRoomCode)}&name=${encodeURIComponent(name)}`;
     });
 
-    // Enter key in join code field
     joinCode.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         joinConfirmBtn.click();
       }
     });
 
-    // ═══════════════════════════════════════════════════════════
-    // SOCKET.IO EVENTS
-    // ═══════════════════════════════════════════════════════════
-
     socket.on('connect', () => {
       console.log('✅ Connected to server');
 
-      // Request initial room list
       socket.emit('get-rooms', (rooms) => {
         renderRooms(rooms || []);
       });
     });
 
-    // ✅ INSTANT ROOM LIST UPDATES
     socket.on('room-list', (rooms) => {
       console.log('📋 Room list updated:', rooms.length, 'rooms');
       renderRooms(rooms || []);
@@ -1029,14 +935,6 @@
     socket.on('disconnect', () => {
       console.log('❌ Disconnected from server');
     });
-
-    socket.on('connect_error', (err) => {
-      console.error('Connection error:', err.message);
-    });
-
-    // ═══════════════════════════════════════════════════════════
-    // INITIALIZATION
-    // ═══════════════════════════════════════════════════════════
 
     console.log('🎵 Music Sync initialized');
   </script>
