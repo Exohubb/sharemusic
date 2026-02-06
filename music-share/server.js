@@ -522,7 +522,7 @@ io.on('connection', (socket) => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// ✅ FILE UPLOAD (FIXED URL GENERATION)
+// FILE UPLOAD TO APPWRITE (UPDATED)
 // ═══════════════════════════════════════════════════════════
 
 app.post('/upload', upload.single('audio'), async (req, res) => {
@@ -552,7 +552,7 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       }
     }
 
-    // ✅ USE InputFile.fromBuffer
+    // Upload to Appwrite
     const fileId = ID.unique();
     const inputFile = InputFile.fromBuffer(
       req.file.buffer,
@@ -571,14 +571,12 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
     console.log('   ✅ File uploaded successfully');
     console.log('   📝 File ID:', uploadedFile.$id);
 
-    // ✅ FIX: Use the ACTUAL file ID from Appwrite response
     const actualFileId = uploadedFile.$id;
-    // Use server proxy instead of direct Appwrite URL
-    const fileUrl = `/audio/${roomCode}`;
+    
+    // ✅ USE DIRECT APPWRITE URL (Most reliable)
+    const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${actualFileId}/download?project=${process.env.APPWRITE_PROJECT_ID}`;
 
-
-
-    room.audioFileId = actualFileId;  // ← Use actual ID
+    room.audioFileId = actualFileId;
     room.audioUrl = fileUrl;
     room.metadata = {
       title: req.file.originalname.replace(/\.[^/.]+$/, ''),
@@ -586,7 +584,7 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       duration: 0
     };
 
-    console.log('   🌐 Public URL:', fileUrl);
+    console.log('   🌐 Download URL:', fileUrl);
 
     // Notify all clients
     io.to(roomCode).emit('file:ready', { 
@@ -615,16 +613,6 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       type: err.type || 'Unknown error'
     });
   }
-});
-
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: Date.now(),
-    appwrite: !!BUCKET_ID 
-  });
 });
 
 
@@ -734,5 +722,6 @@ process.on('SIGINT', () => {
   console.log('\n⏹️ Shutting down...');
   process.exit(0);
 });
+
 
 
