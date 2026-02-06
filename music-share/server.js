@@ -8,6 +8,9 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+// ✅ FIX: Disable global fetch for Appwrite compatibility
+delete global.fetch;
+
 dotenv.config();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -522,7 +525,7 @@ io.on('connection', (socket) => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// FILE UPLOAD TO APPWRITE (UPDATED)
+// ✅ FILE UPLOAD (USING DIRECT APPWRITE URL)
 // ═══════════════════════════════════════════════════════════
 
 app.post('/upload', upload.single('audio'), async (req, res) => {
@@ -573,7 +576,7 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
 
     const actualFileId = uploadedFile.$id;
     
-    // ✅ USE DIRECT APPWRITE URL (Most reliable)
+    // ✅ USE DIRECT DOWNLOAD URL (Works with CORS when domain is added to Appwrite)
     const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${actualFileId}/download?project=${process.env.APPWRITE_PROJECT_ID}`;
 
     room.audioFileId = actualFileId;
@@ -615,92 +618,15 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
   }
 });
 
-
-
-// ═══════════════════════════════════════════════════════════
-// PROXY AUDIO FILE (FIXED FOR APPWRITE NODE SDK)
-// ═══════════════════════════════════════════════════════════
-
-app.get('/audio/:roomCode', async (req, res) => {
-  try {
-    const roomCode = req.params.roomCode;
-    const room = rooms.get(roomCode);
-    
-    if (!room || !room.audioFileId) {
-      console.error('Audio not found for room:', roomCode);
-      return res.status(404).json({ error: 'Audio not found' });
-    }
-
-    console.log('📡 Proxying audio for room', roomCode, 'file:', room.audioFileId);
-
-    // ✅ FIX: Use getFileDownload correctly - it returns a Buffer
-    const fileBuffer = await storage.getFileDownload(
-      BUCKET_ID,
-      room.audioFileId
-    );
-
-    console.log('✅ File downloaded from Appwrite:', fileBuffer.length, 'bytes');
-
-    // Determine content type from filename
-    const ext = room.metadata?.title?.split('.').pop()?.toLowerCase() || 'mp3';
-    const contentTypes = {
-      'mp3': 'audio/mpeg',
-      'm4a': 'audio/mp4',
-      'wav': 'audio/wav',
-      'ogg': 'audio/ogg',
-      'flac': 'audio/flac',
-      'aac': 'audio/aac'
-    };
-    const contentType = contentTypes[ext] || 'audio/mpeg';
-
-    // Set headers for audio streaming
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Length', fileBuffer.length);
-    res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
-    
-    // Handle range requests for seeking
-    const range = req.headers.range;
-    if (range) {
-      const parts = range.replace(/bytes=/, '').split('-');
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileBuffer.length - 1;
-      const chunkSize = (end - start) + 1;
-      
-      res.status(206);
-      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileBuffer.length}`);
-      res.setHeader('Content-Length', chunkSize);
-      res.send(fileBuffer.slice(start, end + 1));
-    } else {
-      res.send(fileBuffer);
-    }
-
-    console.log('✅ Audio sent to client');
-
-  } catch (err) {
-    console.error('❌ Proxy error:', err);
-    console.error('   Error code:', err.code);
-    console.error('   Error type:', err.type);
-    console.error('   Error message:', err.message);
-    
-    res.status(500).json({ 
-      error: 'Failed to load audio',
-      details: err.message 
-    });
-  }
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: Date.now(),
+    appwrite: !!BUCKET_ID,
+    rooms: rooms.size
+  });
 });
-
-// Handle OPTIONS for CORS preflight
-app.options('/audio/:roomCode', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
-  res.sendStatus(200);
-});
-
 
 // ═══════════════════════════════════════════════════════════
 // START SERVER
@@ -722,6 +648,3 @@ process.on('SIGINT', () => {
   console.log('\n⏹️ Shutting down...');
   process.exit(0);
 });
-
-
-
