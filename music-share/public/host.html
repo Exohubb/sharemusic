@@ -3,548 +3,1048 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎛️ Host Dashboard</title>
+  <title>Host Control Panel - Music Sync</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
+      color: white;
       padding: 20px;
     }
-    .container { max-width: 1200px; margin: 0 auto; }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
     
     /* Header */
     .header {
-      background: white;
-      border-radius: 20px;
-      padding: 25px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 20px 30px;
       margin-bottom: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
     }
-    .header h1 { color: #667eea; font-size: 28px; }
+    
+    .room-info h1 {
+      font-size: 1.8em;
+      margin-bottom: 5px;
+    }
+    
     .room-code {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 15px 30px;
-      border-radius: 15px;
-      text-align: center;
+      font-size: 0.9em;
+      opacity: 0.8;
     }
-    .room-code .label { font-size: 12px; opacity: 0.9; }
-    .room-code .code { font-size: 32px; font-weight: bold; letter-spacing: 3px; }
+    
+    .room-code-display {
+      background: rgba(74, 222, 128, 0.3);
+      padding: 15px 25px;
+      border-radius: 12px;
+      text-align: center;
+      border: 2px solid rgba(74, 222, 128, 0.5);
+    }
+    
+    .room-code-display .label {
+      font-size: 0.85em;
+      opacity: 0.8;
+      margin-bottom: 5px;
+    }
+    
+    .room-code-display .code {
+      font-size: 2.5em;
+      font-weight: bold;
+      letter-spacing: 8px;
+      color: #4ade80;
+    }
     
     /* Main Grid */
     .main-grid {
       display: grid;
-      grid-template-columns: 1fr 350px;
+      grid-template-columns: 1fr 1fr;
       gap: 20px;
+      margin-bottom: 20px;
     }
     
-    /* Player Card */
-    .player-card {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-    
-    /* Upload Area */
-    .upload-area {
-      border: 3px dashed #667eea;
+    .panel {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
       border-radius: 15px;
-      padding: 40px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s;
-      margin-bottom: 25px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
-    .upload-area:hover { background: #f9fafb; }
-    .upload-area .icon { font-size: 50px; margin-bottom: 15px; }
-    .upload-area h3 { color: #667eea; margin-bottom: 8px; }
-    .upload-area p { color: #6b7280; font-size: 14px; }
     
-    /* Track Info */
-    .track-info {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      border-radius: 15px;
-      margin-bottom: 25px;
-      display: none;
-    }
-    .track-info.active { display: block; }
-    .track-info .title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-    .track-info .artist { font-size: 16px; opacity: 0.9; }
-    
-    /* Controls */
-    .controls {
-      display: flex;
-      gap: 10px;
+    .panel h2 {
       margin-bottom: 20px;
-    }
-    .btn {
-      flex: 1;
-      padding: 15px;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn.play { background: #10b981; color: white; }
-    .btn.pause { background: #f59e0b; color: white; }
-    .btn.stop { background: #ef4444; color: white; }
-    .btn:hover:not(:disabled) { transform: scale(1.02); }
-    
-    /* Seek Bar */
-    .seek-bar-container { margin-bottom: 20px; }
-    .seek-bar {
-      width: 100%;
-      height: 8px;
-      background: #e5e7eb;
-      border-radius: 10px;
-      cursor: pointer;
-      position: relative;
-    }
-    .seek-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #667eea, #764ba2);
-      width: 0%;
-      border-radius: 10px;
-    }
-    .time-display {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 8px;
-      font-size: 13px;
-      color: #6b7280;
-    }
-    
-    /* Status */
-    .status {
-      background: #f9fafb;
-      padding: 15px;
-      border-radius: 10px;
-      text-align: center;
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
-    .status.error { background: #fef2f2; color: #ef4444; }
-    .status.success { background: #f0fdf4; color: #10b981; }
-    
-    /* Listeners Section */
-    .listeners-section {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      max-height: calc(100vh - 150px);
-      overflow-y: auto;
-    }
-    .listeners-section h2 {
-      color: #667eea;
-      margin-bottom: 20px;
+      font-size: 1.5em;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .listener-count {
-      background: #667eea;
-      color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 14px;
-    }
-    .listener-card {
-      background: #f9fafb;
+    
+    /* Player Panel */
+    .track-info {
+      background: rgba(0, 0, 0, 0.3);
       border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
     }
+    
+    .track-title {
+      font-size: 1.3em;
+      font-weight: bold;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .track-artist {
+      font-size: 0.9em;
+      opacity: 0.7;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      margin: 20px 0 10px 0;
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+      border-radius: 5px;
+      transition: width 0.1s linear;
+    }
+    
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .control-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 1.5em;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    
+    .control-btn.play {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      font-size: 2em;
+    }
+    
+    .control-btn.play:hover {
+      box-shadow: 0 5px 20px rgba(74, 222, 128, 0.5);
+    }
+    
+    /* Upload Section */
+    .upload-area {
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .upload-area:hover {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+    }
+    
+    .upload-area.dragover {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.2);
+    }
+    
+    .upload-icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+    }
+    
+    .upload-text {
+      font-size: 1.1em;
+      margin-bottom: 10px;
+    }
+    
+    .upload-hint {
+      font-size: 0.9em;
+      opacity: 0.7;
+    }
+    
+    input[type="file"] {
+      display: none;
+    }
+    
+    .upload-progress {
+      margin-top: 20px;
+      display: none;
+    }
+    
+    .progress-bar-upload {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    
+    .progress-bar-upload-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+      transition: width 0.3s;
+    }
+    
+    /* Listeners Panel */
+    .listeners-list {
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    
+    .listener-card {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s;
+    }
+    
+    .listener-card:hover {
+      border-color: #4ade80;
+    }
+    
+    .listener-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
     .listener-name {
-      font-weight: 600;
-      color: #374151;
+      font-size: 1.2em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .listener-status {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .status-badge {
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+    
+    .status-badge.synced {
+      background: rgba(74, 222, 128, 0.3);
+      color: #4ade80;
+    }
+    
+    .status-badge.loading {
+      background: rgba(251, 191, 36, 0.3);
+      color: #fbbf24;
+    }
+    
+    .listener-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .stat-box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat-label {
+      font-size: 0.75em;
+      opacity: 0.7;
+      margin-bottom: 3px;
+    }
+    
+    .stat-value {
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    
+    /* ✅ DELAY CONTROL (MAIN FEATURE) */
+    .delay-control {
+      background: rgba(74, 222, 128, 0.1);
+      border: 2px solid rgba(74, 222, 128, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .delay-control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .delay-label {
+      font-size: 0.9em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .delay-value {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #4ade80;
+    }
+    
+    .delay-slider {
+      width: 100%;
+      margin: 10px 0;
+    }
+    
+    .delay-presets {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
+    .preset-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 6px;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .preset-btn:hover {
+      background: rgba(74, 222, 128, 0.3);
+      border-color: #4ade80;
+    }
+    
+    /* Volume Control */
+    .volume-control {
+      margin-bottom: 15px;
+    }
+    
+    .volume-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 8px;
     }
-    .listener-status {
-      font-size: 12px;
-      color: #6b7280;
+    
+    .volume-label {
+      font-size: 0.9em;
+      opacity: 0.8;
     }
+    
+    .volume-value {
+      font-weight: bold;
+    }
+    
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+      border-radius: 3px;
+      -webkit-appearance: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #4ade80;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: #4ade80;
+      cursor: pointer;
+      border-radius: 50%;
+      border: none;
+    }
+    
+    .listener-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .action-btn.mute {
+      background: rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    
+    .action-btn.unmute {
+      background: rgba(74, 222, 128, 0.3);
+      color: #4ade80;
+    }
+    
+    .action-btn:hover {
+      transform: translateY(-2px);
+    }
+    
     .empty-listeners {
       text-align: center;
       padding: 40px 20px;
-      color: #9ca3af;
+      opacity: 0.7;
+    }
+    
+    .empty-listeners-icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+    }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .loading-overlay.active {
+      display: flex;
+    }
+    
+    .loading-content {
+      text-align: center;
+    }
+    
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #4ade80;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 1.2em;
+      margin-top: 15px;
+    }
+    
+    /* Scrollbar */
+    .listeners-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .listeners-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    
+    .listeners-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+    }
+    
+    .listeners-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
     }
     
     /* Responsive */
-    @media (max-width: 1024px) {
-      .main-grid { grid-template-columns: 1fr; }
-      .header { flex-direction: column; gap: 15px; text-align: center; }
+    @media (max-width: 1200px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .room-code-display .code {
+        font-size: 2em;
+        letter-spacing: 5px;
+      }
+      
+      .listener-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .control-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2em;
+      }
+      
+      .control-btn.play {
+        width: 70px;
+        height: 70px;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loadingText">Processing...</div>
+    </div>
+  </div>
+
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <div>
-        <h1>🎛️ Host Dashboard</h1>
-        <p style="color: #6b7280; font-size: 14px;">Control your music stream</p>
+      <div class="room-info">
+        <h1 id="roomName">🎙️ Music Sync Room</h1>
+        <div class="room-code">Host Control Panel</div>
       </div>
-      <div class="room-code">
-        <div class="label">ROOM CODE</div>
-        <div class="code" id="roomCode">----</div>
+      <div class="room-code-display">
+        <div class="label">Room Code</div>
+        <div class="code" id="roomCodeDisplay">----</div>
       </div>
     </div>
 
     <!-- Main Grid -->
     <div class="main-grid">
-      <!-- Player Section -->
-      <div class="player-card">
-        <!-- Upload Area -->
-        <div class="upload-area" onclick="document.getElementById('audioFile').click()">
-          <input type="file" id="audioFile" accept="audio/*" style="display: none;">
-          <div class="icon">📁</div>
-          <h3>Upload Audio File</h3>
-          <p>Click to browse (MP3, WAV, M4A, etc.)</p>
+      <!-- Player Panel -->
+      <div class="panel">
+        <h2>🎵 Music Player</h2>
+        
+        <div class="track-info">
+          <div class="track-title" id="trackTitle">No track loaded</div>
+          <div class="track-artist" id="trackArtist">Upload a file to begin</div>
         </div>
-
-        <!-- Track Info -->
-        <div class="track-info" id="trackInfo">
-          <div class="title" id="trackTitle">Unknown Track</div>
-          <div class="artist" id="trackArtist">Unknown Artist</div>
+        
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
         </div>
-
-        <!-- Status -->
-        <div class="status" id="status">Ready to upload audio file</div>
-
-        <!-- Controls -->
+        
+        <div class="time-display">
+          <span id="currentTime">0:00</span>
+          <span id="duration">0:00</span>
+        </div>
+        
         <div class="controls">
-          <button class="btn play" id="playBtn" onclick="play()" disabled>▶️ Play</button>
-          <button class="btn pause" id="pauseBtn" onclick="pause()" disabled>⏸️ Pause</button>
-          <button class="btn stop" id="stopBtn" onclick="stop()" disabled>⏹️ Stop</button>
+          <button class="control-btn" id="stopBtn" title="Stop">⏹️</button>
+          <button class="control-btn play" id="playBtn" title="Play">▶️</button>
+          <button class="control-btn" id="pauseBtn" title="Pause">⏸️</button>
         </div>
-
-        <!-- Seek Bar -->
-        <div class="seek-bar-container">
-          <div class="seek-bar" id="seekBar" onclick="seekTo(event)">
-            <div class="seek-fill" id="seekFill"></div>
-          </div>
-          <div class="time-display">
-            <span id="currentTime">0:00</span>
-            <span id="totalTime">0:00</span>
+        
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">Click or drag audio file here</div>
+          <div class="upload-hint">Supports MP3, M4A, WAV (Max 100MB)</div>
+          <input type="file" id="fileInput" accept="audio/*">
+        </div>
+        
+        <div class="upload-progress" id="uploadProgress">
+          <div class="upload-text">Uploading...</div>
+          <div class="progress-bar-upload">
+            <div class="progress-bar-upload-fill" id="uploadProgressFill"></div>
           </div>
         </div>
       </div>
 
-      <!-- Listeners Section -->
-      <div class="listeners-section">
-        <h2>👥 Listeners <span class="listener-count" id="listenerCount">0</span></h2>
-        <div id="listenersList">
+      <!-- Listeners Panel -->
+      <div class="panel">
+        <h2>👥 Listeners (<span id="listenerCount">0</span>)</h2>
+        <div class="listeners-list" id="listenersList">
           <div class="empty-listeners">
-            <div style="font-size: 60px; margin-bottom: 15px;">🎧</div>
-            <p>No listeners yet</p>
-            <p style="font-size: 12px; margin-top: 5px;">Share your room code</p>
+            <div class="empty-listeners-icon">👂</div>
+            <div>No listeners yet</div>
+            <div style="font-size: 0.9em; margin-top: 10px;">Share the room code with friends!</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <audio id="audioPlayer" preload="auto"></audio>
+
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    let roomCode = '';
-    let audioContext;
-    let audioBuffer;
-    let sourceNode;
-    let gainNode;
+    const audio = document.getElementById('audioPlayer');
+    
+    const roomCode = new URLSearchParams(window.location.search).get('room');
     let isPlaying = false;
-    let localPosition = 0;
-    let progressInterval = null;
-
-    // Get room code from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    roomCode = urlParams.get('room');
-
+    let hasAudioFile = false;
+    
     if (!roomCode) {
       alert('No room code provided');
       window.location.href = '/';
     }
-
-    document.getElementById('roomCode').textContent = roomCode;
-
+    
+    document.getElementById('roomCodeDisplay').textContent = roomCode;
+    
     // ═══════════════════════════════════════════════════════════
-    // SOCKET CONNECTION
+    // LOADING OVERLAY
     // ═══════════════════════════════════════════════════════════
-
+    
+    function showLoading(text = 'Processing...') {
+      document.getElementById('loadingText').textContent = text;
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+    
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // CONNECT AS HOST
+    // ═══════════════════════════════════════════════════════════
+    
     socket.on('connect', () => {
       console.log('✅ Connected to server');
       
       socket.emit('join-as-host', { roomCode }, (response) => {
         if (response.error) {
-          alert('Room not found. Redirecting...');
+          alert(response.error);
           window.location.href = '/';
           return;
         }
-
+        
         console.log('✅ Joined as host');
-
-        if (response.roomState && response.roomState.audioUrl) {
-          downloadAudio(response.roomState.audioUrl, response.roomState.metadata);
+        
+        if (response.roomState.roomName) {
+          document.getElementById('roomName').textContent = '🎙️ ' + response.roomState.roomName;
         }
+        
+        if (response.roomState.hasFile) {
+          hasAudioFile = true;
+          audio.src = response.roomState.audioUrl;
+          document.getElementById('trackTitle').textContent = response.roomState.metadata.title;
+          document.getElementById('trackArtist').textContent = response.roomState.metadata.artist;
+        }
+        
+        isPlaying = response.roomState.playing;
+        updatePlayButton();
       });
     });
-
-    socket.on('file:ready', (data) => {
-      console.log('📥 File ready:', data.url);
-      downloadAudio(data.url, data.metadata);
+    
+    // ═══════════════════════════════════════════════════════════
+    // PLAYBACK CONTROLS
+    // ═══════════════════════════════════════════════════════════
+    
+    document.getElementById('playBtn').addEventListener('click', () => {
+      if (!hasAudioFile) {
+        alert('Please upload an audio file first');
+        return;
+      }
+      
+      const position = audio.currentTime * 1000;
+      socket.emit('play', { roomCode, position });
+      audio.play();
+      isPlaying = true;
+      updatePlayButton();
     });
-
-    socket.on('listener-list', (listeners) => {
-      const listenersList = document.getElementById('listenersList');
-      const listenerCount = document.getElementById('listenerCount');
+    
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+      socket.emit('pause', { roomCode });
+      audio.pause();
+      isPlaying = false;
+      updatePlayButton();
+    });
+    
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      socket.emit('stop', { roomCode });
+      audio.pause();
+      audio.currentTime = 0;
+      isPlaying = false;
+      updatePlayButton();
+    });
+    
+    function updatePlayButton() {
+      const playBtn = document.getElementById('playBtn');
+      playBtn.textContent = isPlaying ? '▶️' : '▶️';
+      playBtn.style.opacity = isPlaying ? '0.5' : '1';
+    }
+    
+    // Progress bar seek
+    document.getElementById('progressBar').addEventListener('click', (e) => {
+      if (!hasAudioFile) return;
       
-      listenerCount.textContent = listeners.length;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const percent = (e.clientX - rect.left) / rect.width;
+      const position = percent * audio.duration * 1000;
       
-      if (listeners.length === 0) {
-        listenersList.innerHTML = `
-          <div class="empty-listeners">
-            <div style="font-size: 60px; margin-bottom: 15px;">🎧</div>
-            <p>No listeners yet</p>
-            <p style="font-size: 12px; margin-top: 5px;">Share your room code</p>
-          </div>
-        `;
-      } else {
-        listenersList.innerHTML = listeners.map(l => `
-          <div class="listener-card">
-            <div class="listener-name">👤 ${l.name}</div>
-            <div class="listener-status">
-              ${l.downloaded ? '✅ Downloaded' : '⏳ Downloading'} • 
-              ${l.synced ? '🎯 Synced' : '⏰ Syncing'}
-            </div>
-          </div>
-        `).join('');
+      socket.emit('seek', { roomCode, position });
+      audio.currentTime = position / 1000;
+    });
+    
+    // Update progress bar
+    audio.addEventListener('timeupdate', () => {
+      if (!isNaN(audio.duration)) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        document.getElementById('progressFill').style.width = `${progress}%`;
+        document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
+        document.getElementById('duration').textContent = formatTime(audio.duration);
       }
     });
-
-    socket.on('room-closed', () => {
-      alert('Room has been closed');
-      window.location.href = '/';
-    });
-
+    
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
     // ═══════════════════════════════════════════════════════════
     // FILE UPLOAD
     // ═══════════════════════════════════════════════════════════
-
-    document.getElementById('audioFile').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      updateStatus('Uploading...', 'info');
-
+    
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      
+      if (e.dataTransfer.files.length > 0) {
+        handleFileUpload(e.dataTransfer.files[0]);
+      }
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileUpload(e.target.files[0]);
+      }
+    });
+    
+    async function handleFileUpload(file) {
+      if (!file.type.startsWith('audio/')) {
+        alert('Please select an audio file');
+        return;
+      }
+      
+      if (file.size > 100 * 1024 * 1024) {
+        alert('File too large. Maximum size is 100MB');
+        return;
+      }
+      
+      console.log('📤 Uploading:', file.name);
+      showLoading('Uploading audio file...');
+      
       const formData = new FormData();
       formData.append('audio', file);
       formData.append('roomCode', roomCode);
-
+      
       try {
         const response = await fetch('/upload', {
           method: 'POST',
           body: formData
         });
-
+        
         const result = await response.json();
-
+        
         if (result.success) {
-          updateStatus('Upload successful!', 'success');
+          console.log('✅ Upload successful');
+          hideLoading();
+          hasAudioFile = true;
         } else {
-          updateStatus('Upload failed: ' + result.error, 'error');
+          throw new Error(result.error || 'Upload failed');
         }
-
+        
       } catch (err) {
-        console.error('Upload error:', err);
-        updateStatus('Upload failed', 'error');
-      }
-    });
-
-    // ═══════════════════════════════════════════════════════════
-    // AUDIO DOWNLOAD & WEB AUDIO API
-    // ═══════════════════════════════════════════════════════════
-
-    async function downloadAudio(url, metadata) {
-      try {
-        updateStatus('Downloading audio...', 'info');
-        console.log('📥 Downloading:', url);
-
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-        gainNode = audioContext.createGain();
-        gainNode.connect(audioContext.destination);
-
-        console.log('✅ Audio ready:', audioBuffer.duration, 'seconds');
-
-        if (metadata) {
-          document.getElementById('trackInfo').classList.add('active');
-          document.getElementById('trackTitle').textContent = metadata.title;
-          document.getElementById('trackArtist').textContent = metadata.artist;
-        }
-
-        const durationMs = audioBuffer.duration * 1000;
-        document.getElementById('totalTime').textContent = formatTime(durationMs);
-
-        document.getElementById('playBtn').disabled = false;
-        updateStatus('Ready to play!', 'success');
-
-      } catch (err) {
-        console.error('❌ Download error:', err);
-        updateStatus('Failed to load audio: ' + err.message, 'error');
+        console.error('❌ Upload error:', err);
+        hideLoading();
+        alert('Upload failed: ' + err.message);
       }
     }
-
+    
     // ═══════════════════════════════════════════════════════════
-    // PLAYBACK CONTROLS
+    // SOCKET EVENTS
     // ═══════════════════════════════════════════════════════════
-
-    function play() {
-      if (!audioBuffer) return;
-
-      socket.emit('play', { roomCode, position: localPosition });
-
-      // Play locally
-      if (sourceNode) {
-        try { sourceNode.stop(); } catch (e) {}
-      }
-
-      sourceNode = audioContext.createBufferSource();
-      sourceNode.buffer = audioBuffer;
-      sourceNode.connect(gainNode);
-      sourceNode.start(0, localPosition / 1000);
-
+    
+    socket.on('file:ready', ({ url, metadata }) => {
+      console.log('📥 New file ready');
+      audio.src = url;
+      document.getElementById('trackTitle').textContent = metadata.title;
+      document.getElementById('trackArtist').textContent = metadata.artist;
+      hasAudioFile = true;
+      
+      audio.addEventListener('canplaythrough', () => {
+        console.log('✅ Audio loaded');
+        document.getElementById('duration').textContent = formatTime(audio.duration);
+      }, { once: true });
+    });
+    
+    socket.on('sync:play', (data) => {
       isPlaying = true;
-      document.getElementById('playBtn').disabled = true;
-      document.getElementById('pauseBtn').disabled = false;
-      document.getElementById('stopBtn').disabled = false;
-
-      startProgressUpdater();
-      updateStatus('Playing...', 'success');
-    }
-
-    function pause() {
-      socket.emit('pause', { roomCode });
-
-      if (sourceNode) {
-        try { sourceNode.stop(); } catch (e) {}
-        sourceNode = null;
-      }
-
-      isPlaying = false;
-      document.getElementById('playBtn').disabled = false;
-      document.getElementById('pauseBtn').disabled = true;
-
-      stopProgressUpdater();
-      updateStatus('Paused', 'info');
-    }
-
-    function stop() {
-      socket.emit('stop', { roomCode });
-
-      if (sourceNode) {
-        try { sourceNode.stop(); } catch (e) {}
-        sourceNode = null;
-      }
-
-      isPlaying = false;
-      localPosition = 0;
-      document.getElementById('playBtn').disabled = false;
-      document.getElementById('pauseBtn').disabled = true;
-      document.getElementById('stopBtn').disabled = true;
-      document.getElementById('seekFill').style.width = '0%';
-      document.getElementById('currentTime').textContent = '0:00';
-
-      stopProgressUpdater();
-      updateStatus('Stopped', 'info');
-    }
-
-    function seekTo(event) {
-      if (!audioBuffer) return;
-
-      const rect = event.currentTarget.getBoundingClientRect();
-      const percent = (event.clientX - rect.left) / rect.width;
-      const position = percent * audioBuffer.duration * 1000;
-
-      localPosition = position;
-      socket.emit('seek', { roomCode, position });
-
-      if (isPlaying) {
-        play();
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // PROGRESS UPDATER
-    // ═══════════════════════════════════════════════════════════
-
-    function startProgressUpdater() {
-      const startTime = Date.now();
-      const startPosition = localPosition;
-
-      progressInterval = setInterval(() => {
-        if (isPlaying && audioBuffer) {
-          const elapsed = Date.now() - startTime;
-          localPosition = startPosition + elapsed;
-
-          const duration = audioBuffer.duration * 1000;
-          if (localPosition >= duration) {
-            localPosition = duration;
-            stop();
-            return;
-          }
-
-          const percent = (localPosition / duration) * 100;
-          document.getElementById('seekFill').style.width = Math.min(percent, 100) + '%';
-          document.getElementById('currentTime').textContent = formatTime(localPosition);
-        }
-      }, 100);
-    }
-
-    function stopProgressUpdater() {
-      if (progressInterval) {
-        clearInterval(progressInterval);
-        progressInterval = null;
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // HELPERS
-    // ═══════════════════════════════════════════════════════════
-
-    function formatTime(ms) {
-      const totalSeconds = Math.floor(ms / 1000);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    function updateStatus(message, type) {
-      const status = document.getElementById('status');
-      status.textContent = message;
-      status.className = 'status ' + type;
-    }
-
-    window.addEventListener('beforeunload', () => {
-      stopProgressUpdater();
-      if (audioContext) audioContext.close();
+      updatePlayButton();
     });
+    
+    socket.on('sync:pause', (data) => {
+      isPlaying = false;
+      updatePlayButton();
+    });
+    
+    socket.on('sync:stop', (data) => {
+      isPlaying = false;
+      updatePlayButton();
+    });
+    
+    // ═══════════════════════════════════════════════════════════
+    // LISTENER LIST
+    // ═══════════════════════════════════════════════════════════
+    
+    socket.on('listener-list', (listeners) => {
+      console.log('👥 Listener list updated:', listeners.length);
+      
+      document.getElementById('listenerCount').textContent = listeners.length;
+      
+      const container = document.getElementById('listenersList');
+      
+      if (listeners.length === 0) {
+        container.innerHTML = `
+          <div class="empty-listeners">
+            <div class="empty-listeners-icon">👂</div>
+            <div>No listeners yet</div>
+            <div style="font-size: 0.9em; margin-top: 10px;">Share the room code with friends!</div>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = listeners.map(listener => createListenerCard(listener)).join('');
+      
+      // Attach event listeners
+      listeners.forEach(listener => {
+        attachListenerControls(listener.id);
+      });
+    });
+    
+    function createListenerCard(listener) {
+      const statusClass = listener.synced ? 'synced' : 'loading';
+      const statusText = listener.synced ? '✓ Synced' : '⏳ Loading';
+      
+      return `
+        <div class="listener-card">
+          <div class="listener-header">
+            <div class="listener-name">
+              👤 ${escapeHtml(listener.name)}
+            </div>
+            <div class="listener-status">
+              <span class="status-badge ${statusClass}">${statusText}</span>
+            </div>
+          </div>
+          
+          <div class="listener-stats">
+            <div class="stat-box">
+              <div class="stat-label">Ping</div>
+              <div class="stat-value">${listener.ping || 0}ms</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Offset</div>
+              <div class="stat-value">${listener.clockOffset ? listener.clockOffset.toFixed(0) : 0}ms</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Accuracy</div>
+              <div class="stat-value">${listener.syncAccuracy || '—'}</div>
+            </div>
+          </div>
+          
+          <!-- ✅ DELAY CONTROL (MAIN FEATURE) -->
+          <div class="delay-control">
+            <div class="delay-control-header">
+              <div class="delay-label">
+                ⏱️ Delay Adjustment
+              </div>
+              <div class="delay-value" id="delay-value-${listener.id}">
+                ${listener.manualDelay || 0} ms
+              </div>
+            </div>
+            <input 
+              type="range" 
+              class="delay-slider" 
+              id="delay-${listener.id}"
+              min="-2000" 
+              max="2000" 
+              value="${listener.manualDelay || 0}" 
+              step="10"
+            >
+            <div class="delay-presets">
+              <button class="preset-btn" data-listener="${listener.id}" data-delay="-100">-100ms</button>
+              <button class="preset-btn" data-listener="${listener.id}" data-delay="0">Reset</button>
+              <button class="preset-btn" data-listener="${listener.id}" data-delay="100">+100ms</button>
+            </div>
+          </div>
+          
+          <!-- Volume Control -->
+          <div class="volume-control">
+            <div class="volume-header">
+              <div class="volume-label">🔊 Volume</div>
+              <div class="volume-value" id="volume-value-${listener.id}">
+                ${Math.round(listener.volume * 100)}%
+              </div>
+            </div>
+            <input 
+              type="range" 
+              id="volume-${listener.id}"
+              min="0" 
+              max="100" 
+              value="${listener.volume * 100}" 
+              step="1"
+            >
+          </div>
+          
+          <!-- Actions -->
+          <div class="listener-actions">
+            <button class="action-btn ${listener.muted ? 'unmute' : 'mute'}" id="mute-${listener.id}">
+              ${listener.muted ? '🔊 Unmute' : '🔇 Mute'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    function attachListenerControls(listenerId) {
+      // Delay slider
+      const delaySlider = document.getElementById(`delay-${listenerId}`);
+      if (delaySlider) {
+        delaySlider.addEventListener('input', (e) => {
+          const delay = parseInt(e.target.value);
+          document.getElementById(`delay-value-${listenerId}`).textContent = `${delay} ms`;
+          socket.emit('set-listener-delay', { roomCode, listenerId, delay });
+        });
+      }
+      
+      // Delay presets
+      document.querySelectorAll(`.preset-btn[data-listener="${listenerId}"]`).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const delay = parseInt(btn.dataset.delay);
+          const slider = document.getElementById(`delay-${listenerId}`);
+          slider.value = delay;
+          document.getElementById(`delay-value-${listenerId}`).textContent = `${delay} ms`;
+          socket.emit('set-listener-delay', { roomCode, listenerId, delay });
+        });
+      });
+      
+      // Volume slider
+      const volumeSlider = document.getElementById(`volume-${listenerId}`);
+      if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+          const volume = parseInt(e.target.value) / 100;
+          document.getElementById(`volume-value-${listenerId}`).textContent = `${Math.round(volume * 100)}%`;
+          socket.emit('set-listener-volume', { roomCode, listenerId, volume });
+        });
+      }
+      
+      // Mute button
+      const muteBtn = document.getElementById(`mute-${listenerId}`);
+      if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+          const isMuted = muteBtn.classList.contains('mute');
+          socket.emit('mute-listener', { roomCode, listenerId, muted: isMuted });
+        });
+      }
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    socket.on('room-closed', () => {
+      alert('Room has been closed');
+      window.location.href = '/';
+    });
+    
+    console.log('🎙️ Host panel initialized');
   </script>
 </body>
 </html>
