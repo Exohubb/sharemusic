@@ -1,292 +1,406 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Listener - Music Sync</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>Listener – Music Sync</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
       min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      color: white;
+      justify-content: center;
+      color: #f9fafb;
       padding: 20px;
+      overflow-x: hidden;
     }
-    
+
     .container {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 40px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(24px);
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 32px;
       max-width: 600px;
       width: 100%;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      animation: fadeInScale 0.5s ease-out;
     }
-    
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Header */
     .header {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
     }
-    
+
     .header h1 {
-      font-size: 2em;
-      margin-bottom: 10px;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff, #a5b4fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    
+
     .room-info {
-      font-size: 0.95em;
-      opacity: 0.8;
+      font-size: 0.9rem;
+      opacity: 0.85;
     }
-    
+
+    /* Status Badge */
     .status {
       text-align: center;
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 25px;
-      font-weight: bold;
-      font-size: 1.1em;
+      padding: 16px 20px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      font-weight: 700;
+      font-size: 1rem;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
+      animation: slideDown 0.4s ease-out;
     }
-    
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .status.connecting {
-      background: rgba(251, 191, 36, 0.3);
+      background: rgba(251, 191, 36, 0.2);
+      border: 1px solid rgba(252, 211, 77, 0.6);
       color: #fbbf24;
     }
-    
+
     .status.downloading {
-      background: rgba(59, 130, 246, 0.3);
-      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid rgba(96, 165, 250, 0.6);
+      color: #60a5fa;
     }
-    
+
     .status.syncing {
-      background: rgba(251, 191, 36, 0.3);
+      background: rgba(251, 191, 36, 0.2);
+      border: 1px solid rgba(252, 211, 77, 0.6);
       color: #fbbf24;
     }
-    
+
     .status.ready {
-      background: rgba(74, 222, 128, 0.3);
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid rgba(74, 222, 128, 0.6);
       color: #4ade80;
     }
-    
+
     .status.error {
-      background: rgba(239, 68, 68, 0.3);
-      color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(248, 113, 113, 0.6);
+      color: #f87171;
     }
-    
+
     .spinner {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border: 3px solid rgba(255, 255, 255, 0.3);
       border-top-color: currentColor;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
+      animation: spin 0.8s linear infinite;
     }
-    
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    
-    .player {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 25px;
+
+    /* Download Progress */
+    .download-progress {
+      margin-bottom: 24px;
+      display: none;
     }
-    
-    .track-info {
+
+    .download-progress.active {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .download-text {
       text-align: center;
-      margin-bottom: 25px;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      font-weight: 600;
     }
-    
+
+    .download-bar {
+      width: 100%;
+      height: 10px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .download-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    /* Player */
+    .player {
+      display: none;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .player.active {
+      display: block;
+    }
+
+    .track-info {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
     .track-title {
-      font-size: 1.4em;
-      font-weight: bold;
-      margin-bottom: 8px;
-      white-space: nowrap;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 6px;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    
+
     .track-artist {
-      font-size: 0.95em;
+      font-size: 0.9rem;
       opacity: 0.7;
     }
-    
+
+    /* Progress Bar */
     .progress-bar {
       width: 100%;
       height: 10px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 5px;
-      margin: 20px 0;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+      margin: 18px 0;
       position: relative;
       overflow: hidden;
     }
-    
+
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4ade80, #22c55e);
-      border-radius: 5px;
+      background: linear-gradient(90deg, #22c55e, #10b981);
+      border-radius: 999px;
       transition: width 0.1s linear;
     }
-    
+
     .time-display {
       display: flex;
       justify-content: space-between;
-      font-size: 0.95em;
+      font-size: 0.85rem;
       opacity: 0.8;
+      margin-bottom: 18px;
     }
-    
+
+    /* Playback Indicator */
     .playback-indicator {
       text-align: center;
-      padding: 15px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      margin-top: 20px;
-      font-size: 0.9em;
-    }
-    
-    .playback-indicator.playing {
-      background: rgba(74, 222, 128, 0.2);
-      color: #4ade80;
-    }
-    
-    .playback-indicator.paused {
-      background: rgba(251, 191, 36, 0.2);
-      color: #fbbf24;
-    }
-    
-    .sync-stats {
-      background: rgba(255, 255, 255, 0.1);
+      padding: 14px 18px;
+      background: rgba(148, 163, 184, 0.15);
       border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .sync-stats h3 {
-      font-size: 1.1em;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    
-    .stat-box {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 12px;
-      border-radius: 8px;
-      text-align: center;
-    }
-    
-    .stat-label {
-      font-size: 0.8em;
-      opacity: 0.7;
-      margin-bottom: 5px;
-    }
-    
-    .stat-value {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: #4ade80;
-    }
-    
-    .download-progress {
-      margin: 20px 0;
-    }
-    
-    .download-progress-text {
-      text-align: center;
-      margin-bottom: 10px;
-      font-size: 0.95em;
-    }
-    
-    .download-progress-bar {
-      width: 100%;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    
-    .download-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #4ade80, #22c55e);
-      transition: width 0.3s;
-    }
-    
-    .info-message {
-      background: rgba(59, 130, 246, 0.2);
-      border: 1px solid rgba(59, 130, 246, 0.4);
-      border-radius: 10px;
-      padding: 15px;
-      margin-top: 20px;
-      font-size: 0.9em;
-      text-align: center;
-    }
-    
-    .info-message-icon {
-      font-size: 1.5em;
-      margin-bottom: 8px;
-    }
-    
-    .volume-indicator {
-      text-align: center;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      margin-top: 15px;
-      font-size: 0.9em;
+      margin-top: 18px;
+      font-size: 1rem;
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
     }
-    
+
+    .playback-indicator.playing {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid rgba(74, 222, 128, 0.5);
+      color: #4ade80;
+    }
+
+    .playback-indicator.paused {
+      background: rgba(251, 191, 36, 0.2);
+      border: 1px solid rgba(252, 211, 77, 0.5);
+      color: #fbbf24;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.3;
+        transform: scale(0.8);
+      }
+    }
+
+    /* Volume Indicator */
+    .volume-indicator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(148, 163, 184, 0.15);
+      border-radius: 12px;
+      margin-top: 14px;
+      font-size: 0.9rem;
+    }
+
     .volume-bar {
       flex: 1;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
+      height: 8px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
       overflow: hidden;
     }
-    
-    .volume-bar-fill {
+
+    .volume-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4ade80, #22c55e);
-      transition: width 0.3s;
+      background: linear-gradient(90deg, #22c55e, #10b981);
+      border-radius: 999px;
+      transition: width 0.3s ease;
     }
-    
+
+    /* Sync Stats */
+    .sync-stats {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 18px;
+      margin-top: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      display: none;
+    }
+
+    .sync-stats.active {
+      display: block;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .sync-stats h3 {
+      font-size: 1rem;
+      margin-bottom: 14px;
+      text-align: center;
+      opacity: 0.9;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat-box {
+      background: rgba(15, 23, 42, 0.9);
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    /* Info Message */
+    .info-message {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(96, 165, 250, 0.4);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-top: 20px;
+      font-size: 0.85rem;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
     /* Responsive */
-    @media (max-width: 600px) {
+    @media (max-width: 640px) {
+      body {
+        padding: 16px;
+      }
+
       .container {
-        padding: 25px;
+        padding: 24px;
       }
-      
+
       .header h1 {
-        font-size: 1.6em;
+        font-size: 1.6rem;
       }
-      
+
+      .track-title {
+        font-size: 1.1rem;
+      }
+
       .stats-grid {
         grid-template-columns: 1fr;
       }
-      
-      .track-title {
-        font-size: 1.2em;
+    }
+
+    @media (max-width: 400px) {
+      .container {
+        padding: 20px;
+      }
+
+      .header h1 {
+        font-size: 1.4rem;
       }
     }
   </style>
@@ -297,56 +411,57 @@
     <div class="header">
       <h1>🎧 Music Sync</h1>
       <div class="room-info">
-        Listener Mode • Room: <span id="roomName">Loading...</span>
+        Listener Mode • Room: <strong id="roomNameDisplay">Loading...</strong>
       </div>
     </div>
 
     <!-- Status -->
-    <div class="status connecting" id="status">
+    <div class="status connecting" id="statusBadge">
       <div class="spinner"></div>
       <span id="statusText">Connecting...</span>
     </div>
 
     <!-- Download Progress -->
-    <div class="download-progress" id="downloadProgress" style="display: none;">
-      <div class="download-progress-text" id="downloadText">Downloading audio...</div>
-      <div class="download-progress-bar">
-        <div class="download-progress-fill" id="downloadProgressFill"></div>
+    <div class="download-progress" id="downloadProgress">
+      <div class="download-text" id="downloadText">Downloading audio...</div>
+      <div class="download-bar">
+        <div class="download-fill" id="downloadFill"></div>
       </div>
     </div>
 
     <!-- Player -->
-    <div class="player" id="player" style="display: none;">
+    <div class="player" id="playerContainer">
       <div class="track-info">
-        <div class="track-title" id="trackTitle">No track loaded</div>
+        <div class="track-title" id="trackTitle">No track</div>
         <div class="track-artist" id="trackArtist">—</div>
       </div>
-      
+
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill"></div>
       </div>
-      
+
       <div class="time-display">
         <span id="currentTime">0:00</span>
         <span id="duration">0:00</span>
       </div>
-      
+
       <div class="playback-indicator paused" id="playbackIndicator">
-        ⏸️ Paused
+        <span class="pulse-dot"></span>
+        <span id="playbackText">⏸️ Paused</span>
       </div>
-      
-      <!-- Volume Indicator (Controlled by Host) -->
+
+      <!-- Volume (Controlled by Host) -->
       <div class="volume-indicator">
         <span>🔊</span>
         <div class="volume-bar">
-          <div class="volume-bar-fill" id="volumeBarFill" style="width: 100%;"></div>
+          <div class="volume-fill" id="volumeFill"></div>
         </div>
         <span id="volumeText">100%</span>
       </div>
     </div>
 
     <!-- Sync Stats -->
-    <div class="sync-stats" id="syncStats" style="display: none;">
+    <div class="sync-stats" id="syncStats">
       <h3>📊 Sync Status</h3>
       <div class="stats-grid">
         <div class="stat-box">
@@ -370,8 +485,8 @@
 
     <!-- Info Message -->
     <div class="info-message">
-      <div class="info-message-icon">ℹ️</div>
-      <div>The host controls playback, volume, and sync settings</div>
+      <span>ℹ️</span>
+      <span>The host controls all playback, volume, and sync settings</span>
     </div>
   </div>
 
@@ -380,17 +495,30 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     // ═══════════════════════════════════════════════════════════
-    // ✅ LISTENER CLIENT (NO CONTROLS, HOST MANAGES EVERYTHING)
+    // INITIALIZATION
     // ═══════════════════════════════════════════════════════════
-    
-    const socket = io();
+
+    const socket = io({
+      transports: ['websocket', 'polling'],
+      upgrade: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
+    });
+
     const audio = document.getElementById('audioPlayer');
-    
+
     const roomCode = new URLSearchParams(window.location.search).get('room');
     const listenerName = new URLSearchParams(window.location.search).get('name') || 'Listener';
-    
+
+    if (!roomCode) {
+      alert('No room code provided');
+      window.location.href = '/';
+    }
+
+    // State
     let clockOffset = 0;
-    let manualDelay = 0; // Set by host
+    let manualDelay = 0; // ✅ Set by host (±2500ms)
     let syncSamples = [];
     let scheduledPlayData = null;
     let syncCheckInterval = null;
@@ -398,241 +526,250 @@
     let isAudioFullyLoaded = false;
     let currentVolume = 1.0;
     let isMuted = false;
-    
-    if (!roomCode) {
-      alert('No room code provided');
-      window.location.href = '/';
-    }
-    
+    let avgPing = 0;
+
     // ═══════════════════════════════════════════════════════════
-    // UI HELPERS
+    // UI FUNCTIONS
     // ═══════════════════════════════════════════════════════════
-    
-    function setStatus(text, className) {
-      const statusEl = document.getElementById('status');
-      const statusTextEl = document.getElementById('statusText');
-      
-      statusEl.className = 'status ' + className;
-      statusTextEl.textContent = text;
-      
-      // Hide spinner for certain states
-      const spinner = statusEl.querySelector('.spinner');
-      if (className === 'ready' || className === 'error') {
+
+    function setStatus(text, type) {
+      const badge = document.getElementById('statusBadge');
+      const statusText = document.getElementById('statusText');
+
+      badge.className = 'status ' + type;
+      statusText.textContent = text;
+
+      const spinner = badge.querySelector('.spinner');
+      if (type === 'ready' || type === 'error') {
         if (spinner) spinner.style.display = 'none';
       } else {
         if (spinner) spinner.style.display = 'block';
       }
     }
-    
+
     function showPlayer() {
-      document.getElementById('player').style.display = 'block';
-      document.getElementById('syncStats').style.display = 'block';
+      document.getElementById('playerContainer').classList.add('active');
+      document.getElementById('syncStats').classList.add('active');
     }
-    
+
     function updatePlaybackIndicator(isPlaying) {
       const indicator = document.getElementById('playbackIndicator');
+      const text = document.getElementById('playbackText');
+
       if (isPlaying) {
         indicator.className = 'playback-indicator playing';
-        indicator.textContent = '▶️ Playing';
+        text.textContent = '▶️ Playing';
       } else {
         indicator.className = 'playback-indicator paused';
-        indicator.textContent = '⏸️ Paused';
+        text.textContent = '⏸️ Paused';
       }
     }
-    
+
     function formatTime(seconds) {
+      if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
       const mins = Math.floor(seconds / 60);
       const secs = Math.floor(seconds % 60);
       return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
-    
+
     // ═══════════════════════════════════════════════════════════
-    // NTP SYNC (HIGH ACCURACY)
+    // ✅ NTP CLOCK SYNC (HIGH PRECISION)
     // ═══════════════════════════════════════════════════════════
-    
+
     async function performNTPSync() {
-      console.log('🕐 Performing NTP sync...');
+      console.log('🕐 Starting NTP clock sync...');
       setStatus('Syncing clocks...', 'syncing');
-      
+
       syncSamples = [];
-      
+
+      // Perform 10 sync rounds
       for (let i = 0; i < 10; i++) {
         const clientSendTime = performance.now();
-        
+
         await new Promise(resolve => {
           socket.emit('ntp:sync', clientSendTime, (response) => {
             const clientReceiveTime = performance.now();
-            
+
             const roundTripTime = clientReceiveTime - clientSendTime;
-            const offset = ((response.serverReceiveTime - clientSendTime) + 
+            const offset = ((response.serverReceiveTime - clientSendTime) +
                            (response.serverSendTime - clientReceiveTime)) / 2;
-            
+
             syncSamples.push({ offset, rtt: roundTripTime });
             resolve();
           });
         });
-        
+
         await new Promise(resolve => setTimeout(resolve, 50));
       }
-      
-      // Remove outliers and average
+
+      // Sort by RTT and take best 5 samples
       syncSamples.sort((a, b) => a.rtt - b.rtt);
-      const goodSamples = syncSamples.slice(0, 5);
-      
-      clockOffset = goodSamples.reduce((sum, s) => sum + s.offset, 0) / goodSamples.length;
-      const avgPing = goodSamples.reduce((sum, s) => sum + s.rtt, 0) / goodSamples.length;
-      
-      const variance = goodSamples.reduce((sum, s) => 
-        sum + Math.pow(s.offset - clockOffset, 2), 0) / goodSamples.length;
+      const bestSamples = syncSamples.slice(0, 5);
+
+      // Calculate average offset
+      clockOffset = bestSamples.reduce((sum, s) => sum + s.offset, 0) / bestSamples.length;
+      avgPing = bestSamples.reduce((sum, s) => sum + s.rtt, 0) / bestSamples.length;
+
+      // Calculate accuracy
+      const variance = bestSamples.reduce((sum, s) =>
+        sum + Math.pow(s.offset - clockOffset, 2), 0) / bestSamples.length;
       const stdDev = Math.sqrt(variance);
-      
-      const accuracy = stdDev < 5 ? 'excellent' : stdDev < 15 ? 'good' : stdDev < 30 ? 'fair' : 'poor';
-      
+
+      const accuracy = stdDev < 5 ? 'excellent' :
+                       stdDev < 15 ? 'good' :
+                       stdDev < 30 ? 'fair' : 'poor';
+
       console.log(`✅ Clock sync complete:`);
       console.log(`   Offset: ${clockOffset.toFixed(2)} ms`);
       console.log(`   Ping: ${avgPing.toFixed(2)} ms`);
       console.log(`   Accuracy: ${accuracy}`);
-      
+
       // Update UI
-      document.getElementById('clockOffsetValue').textContent = `${clockOffset.toFixed(0)}ms`;
-      document.getElementById('pingValue').textContent = `${avgPing.toFixed(0)}ms`;
+      document.getElementById('clockOffsetValue').textContent = `${Math.round(clockOffset)}ms`;
+      document.getElementById('pingValue').textContent = `${Math.round(avgPing)}ms`;
       document.getElementById('syncAccuracyValue').textContent = accuracy;
-      
+
       // Send stats to server
       socket.emit('update-sync-stats', {
         roomCode,
-        clockOffset: clockOffset,
+        clockOffset,
         syncAccuracy: accuracy
       });
-      
-      // Update ping periodically
+
+      // Send ping updates periodically
       setInterval(() => {
-        socket.emit('update-ping', { roomCode, ping: avgPing.toFixed(0) });
+        socket.emit('update-ping', { roomCode, ping: Math.round(avgPing) });
       }, 5000);
     }
-    
+
     // ═══════════════════════════════════════════════════════════
-    // GET SERVER TIME
+    // GET SERVER TIME (WITH MANUAL DELAY)
     // ═══════════════════════════════════════════════════════════
-    
+
     function getServerTime() {
       return performance.now() + clockOffset + manualDelay;
     }
-    
+
     // ═══════════════════════════════════════════════════════════
-    // AUDIO LOADING (FULL DOWNLOAD WITH PROGRESS)
+    // ✅ AUDIO LOADING (FAST DOWNLOAD WITH PROGRESS)
     // ═══════════════════════════════════════════════════════════
-    
+
     async function loadAudio(url) {
       console.log('📥 Downloading audio...');
       setStatus('Downloading audio...', 'downloading');
-      
-      document.getElementById('downloadProgress').style.display = 'block';
+
+      document.getElementById('downloadProgress').classList.add('active');
       isAudioFullyLoaded = false;
-      
+
       try {
         const response = await fetch(url);
-        
+
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const contentLength = response.headers.get('content-length');
         const total = parseInt(contentLength, 10);
         let loaded = 0;
-        
+
         const reader = response.body.getReader();
         const chunks = [];
-        
+
         while (true) {
           const { done, value } = await reader.read();
-          
+
           if (done) break;
-          
+
           chunks.push(value);
           loaded += value.length;
-          
+
           if (total) {
             const progress = Math.round((loaded / total) * 100);
-            document.getElementById('downloadProgressFill').style.width = `${progress}%`;
+            document.getElementById('downloadFill').style.width = progress + '%';
             document.getElementById('downloadText').textContent = `Downloading audio... ${progress}%`;
           }
         }
-        
-        // Create blob
+
+        // Create blob and load into audio element
         const blob = new Blob(chunks, { type: 'audio/mpeg' });
         const objectUrl = URL.createObjectURL(blob);
-        
+
         console.log(`✅ Audio downloaded: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
-        
-        // Load into audio element
+
         audio.src = objectUrl;
-        
+
         await new Promise((resolve, reject) => {
           audio.addEventListener('canplaythrough', resolve, { once: true });
           audio.addEventListener('error', reject, { once: true });
           audio.load();
         });
-        
+
         isAudioFullyLoaded = true;
-        
+
         document.getElementById('duration').textContent = formatTime(audio.duration);
-        document.getElementById('downloadProgress').style.display = 'none';
-        
+        document.getElementById('downloadProgress').classList.remove('active');
+
         setStatus('Ready to play', 'ready');
         showPlayer();
-        
+
         console.log('✅ Audio ready, duration:', audio.duration);
-        
+
         // Notify server
         socket.emit('download-complete', { roomCode });
         socket.emit('sync-ready', { roomCode });
-        
-        // Start playback if pending
-        if (scheduledPlayData) {
-          syncToScheduledPlay(scheduledPlayData);
-          startSyncMonitoring();
-        }
-        
+
+        // ✅ REQUEST CURRENT PLAYBACK STATE (FOR INSTANT SYNC)
+        socket.emit('request-sync', { roomCode }, (snapshot) => {
+          if (snapshot && snapshot.ok && snapshot.playing) {
+            console.log('🎯 Syncing to current playback...');
+            scheduledPlayData = {
+              scheduledStartTime: snapshot.scheduledStartTime,
+              offset: snapshot.offset,
+              serverTime: snapshot.serverTime
+            };
+            syncToScheduledPlay(scheduledPlayData);
+            startSyncMonitoring();
+          }
+        });
+
       } catch (err) {
         console.error('❌ Failed to load audio:', err);
         setStatus('Failed to load audio', 'error');
-        document.getElementById('downloadProgress').style.display = 'none';
+        document.getElementById('downloadProgress').classList.remove('active');
       }
     }
-    
+
     // ═══════════════════════════════════════════════════════════
-    // SMOOTH SYNC ENGINE
+    // ✅ SMOOTH SYNC ENGINE (NO LAG/JITTER)
     // ═══════════════════════════════════════════════════════════
-    
+
     function syncToScheduledPlay(data) {
       if (!isAudioFullyLoaded) {
         console.warn('⚠️ Audio not ready, queuing...');
         scheduledPlayData = data;
         return;
       }
-      
+
       const currentServerTime = getServerTime();
       const targetStartTime = data.scheduledStartTime;
       const targetPosition = data.offset / 1000;
       const timeUntilStart = targetStartTime - currentServerTime;
-      
-      console.log(`🎯 Sync: target=${targetStartTime}, current=${currentServerTime}, delay=${timeUntilStart.toFixed(0)}ms`);
-      
+
+      console.log(`🎯 Sync: target=${targetStartTime.toFixed(0)}, current=${currentServerTime.toFixed(0)}, delay=${timeUntilStart.toFixed(0)}ms`);
+
       if (timeUntilStart > 100) {
         // Schedule future playback
         audio.currentTime = targetPosition;
         audio.playbackRate = 1.0;
-        audio.pause();
-        
+
         setTimeout(() => {
           audio.play().catch(err => {
             console.error('❌ Play failed:', err);
-            // Auto-play might be blocked, try on user interaction
+            // Auto-play blocked, wait for user interaction
             document.body.addEventListener('click', () => audio.play(), { once: true });
           });
         }, timeUntilStart);
-        
+
       } else if (timeUntilStart > -200) {
         // Start immediately
         audio.currentTime = targetPosition;
@@ -641,7 +778,7 @@
           console.error('❌ Play failed:', err);
           document.body.addEventListener('click', () => audio.play(), { once: true });
         });
-        
+
       } else {
         // Late start, catch up
         const catchUpPosition = targetPosition + (-timeUntilStart / 1000);
@@ -650,122 +787,125 @@
         audio.playbackRate = 1.0;
         audio.play().catch(err => console.error('❌ Play failed:', err));
       }
-      
+
       scheduledPlayData = data;
       updatePlaybackIndicator(true);
     }
-    
+
     // ═══════════════════════════════════════════════════════════
-    // SMOOTH DRIFT CORRECTION
+    // ✅ DRIFT CORRECTION (SMOOTH, NO CRACKLING)
     // ═══════════════════════════════════════════════════════════
-    
+
     function startSyncMonitoring() {
       if (syncCheckInterval) clearInterval(syncCheckInterval);
-      
+
       syncCheckInterval = setInterval(() => {
         if (!scheduledPlayData || audio.paused || !isAudioFullyLoaded) return;
-        
+
         const now = Date.now();
         const currentServerTime = getServerTime();
         const elapsedSinceScheduled = currentServerTime - scheduledPlayData.scheduledStartTime;
         const expectedPosition = (scheduledPlayData.offset + elapsedSinceScheduled) / 1000;
         const actualPosition = audio.currentTime;
         const positionError = (actualPosition - expectedPosition) * 1000;
-        
+
         // Update drift display
-        document.getElementById('driftValue').textContent = `${positionError.toFixed(0)}ms`;
-        
+        document.getElementById('driftValue').textContent = `${Math.round(positionError)}ms`;
+
         const absError = Math.abs(positionError);
-        
+
         if (absError > 500) {
-          // Large drift: Jump (but rate limit)
+          // Large drift: Hard correction (rate limited)
           if (now - lastCorrectionTime > 3000) {
-            console.warn(`⚠️ Large drift: ${positionError.toFixed(0)}ms, correcting...`);
+            console.warn(`⚠️ Large drift: ${Math.round(positionError)}ms, correcting...`);
             audio.currentTime = expectedPosition;
             lastCorrectionTime = now;
           }
         } else if (absError > 100 && absError <= 500) {
           // Medium drift: Playback rate adjustment
           if (positionError > 0) {
-            audio.playbackRate = 0.98; // Slow down
+            audio.playbackRate = 0.98; // Slightly slower
           } else {
-            audio.playbackRate = 1.02; // Speed up
+            audio.playbackRate = 1.02; // Slightly faster
           }
-          
+
+          // Reset playback rate after 2 seconds
           setTimeout(() => {
             if (audio.playbackRate !== 1.0) {
               audio.playbackRate = 1.0;
             }
           }, 2000);
         } else {
-          // Small drift: Keep normal
+          // Small drift: No correction needed
           if (audio.playbackRate !== 1.0) {
             audio.playbackRate = 1.0;
           }
         }
-        
-      }, 3000);
+
+      }, 3000); // Check every 3 seconds
     }
-    
+
     // ═══════════════════════════════════════════════════════════
     // SOCKET EVENTS
     // ═══════════════════════════════════════════════════════════
-    
+
     socket.on('connect', async () => {
       console.log('✅ Connected to server');
       setStatus('Syncing clocks...', 'syncing');
-      
-      // Perform NTP sync
+
+      // ✅ PERFORM NTP SYNC
       await performNTPSync();
-      
-      // Join room
+
+      // ✅ JOIN ROOM
       socket.emit('join-as-listener', { roomCode, listenerName }, async (response) => {
-        if (response.error) {
-          setStatus(response.error, 'error');
+        if (!response || !response.success) {
+          setStatus(response?.error || 'Failed to join room', 'error');
           setTimeout(() => window.location.href = '/', 3000);
           return;
         }
-        
+
         console.log('✅ Joined room:', roomCode);
-        document.getElementById('roomName').textContent = response.roomName;
-        
+        document.getElementById('roomNameDisplay').textContent = response.roomName;
+
         // Load audio if available
         if (response.audioUrl) {
           await loadAudio(response.audioUrl);
-          
+
           document.getElementById('trackTitle').textContent = response.currentState.metadata.title;
           document.getElementById('trackArtist').textContent = response.currentState.metadata.artist;
-          
-          // Sync if playing
+
+          // ✅ SYNC IMMEDIATELY IF PLAYING
           if (response.currentState.playing && isAudioFullyLoaded) {
-            syncToScheduledPlay({
+            scheduledPlayData = {
               scheduledStartTime: response.currentState.scheduledStartTime,
               offset: response.currentState.startOffset,
               serverTime: response.currentState.serverTime
-            });
+            };
+            syncToScheduledPlay(scheduledPlayData);
             startSyncMonitoring();
           }
         } else {
           setStatus('Waiting for audio...', 'syncing');
+          showPlayer();
         }
       });
     });
-    
+
     socket.on('file:ready', async ({ url, metadata }) => {
       console.log('📥 New file ready:', metadata.title);
       document.getElementById('trackTitle').textContent = metadata.title;
       document.getElementById('trackArtist').textContent = metadata.artist;
       await loadAudio(url);
     });
-    
+
     socket.on('sync:play', (data) => {
-      console.log('▶️ Play command');
+      console.log('▶️ Play command received');
       syncToScheduledPlay(data);
       startSyncMonitoring();
     });
-    
+
     socket.on('sync:pause', (data) => {
-      console.log('⏸️ Pause command');
+      console.log('⏸️ Pause command received');
       audio.pause();
       audio.currentTime = data.position / 1000;
       audio.playbackRate = 1.0;
@@ -773,9 +913,9 @@
       updatePlaybackIndicator(false);
       if (syncCheckInterval) clearInterval(syncCheckInterval);
     });
-    
+
     socket.on('sync:stop', (data) => {
-      console.log('⏹️ Stop command');
+      console.log('⏹️ Stop command received');
       audio.pause();
       audio.currentTime = 0;
       audio.playbackRate = 1.0;
@@ -783,70 +923,80 @@
       updatePlaybackIndicator(false);
       if (syncCheckInterval) clearInterval(syncCheckInterval);
     });
-    
+
     socket.on('sync:seek', (data) => {
-      console.log('⏩ Seek command');
+      console.log('⏩ Seek command received');
       audio.currentTime = data.position / 1000;
       audio.playbackRate = 1.0;
     });
-    
+
     // ✅ HOST CONTROLS VOLUME
     socket.on('volume-update', ({ volume }) => {
       console.log('🔊 Volume updated by host:', volume);
       currentVolume = volume;
       audio.volume = isMuted ? 0 : volume;
-      
-      document.getElementById('volumeBarFill').style.width = `${volume * 100}%`;
-      document.getElementById('volumeText').textContent = `${Math.round(volume * 100)}%`;
+
+      document.getElementById('volumeFill').style.width = (volume * 100) + '%';
+      document.getElementById('volumeText').textContent = Math.round(volume * 100) + '%';
     });
-    
+
     // ✅ HOST CONTROLS MUTE
     socket.on('mute-update', ({ muted }) => {
       console.log('🔇 Mute updated by host:', muted);
       isMuted = muted;
       audio.muted = muted;
-      
+
       if (muted) {
-        document.getElementById('volumeBarFill').style.width = '0%';
+        document.getElementById('volumeFill').style.width = '0%';
         document.getElementById('volumeText').textContent = 'Muted';
       } else {
-        document.getElementById('volumeBarFill').style.width = `${currentVolume * 100}%`;
-        document.getElementById('volumeText').textContent = `${Math.round(currentVolume * 100)}%`;
+        document.getElementById('volumeFill').style.width = (currentVolume * 100) + '%';
+        document.getElementById('volumeText').textContent = Math.round(currentVolume * 100) + '%';
       }
     });
-    
-    // ✅ HOST CONTROLS DELAY
+
+    // ✅ HOST CONTROLS DELAY (±2500ms)
     socket.on('delay-update', ({ delay }) => {
       console.log('⏱️ Delay updated by host:', delay, 'ms');
       manualDelay = delay;
-      
+
       // Re-sync if playing
       if (scheduledPlayData && !audio.paused) {
         syncToScheduledPlay(scheduledPlayData);
       }
     });
-    
+
     socket.on('room-closed', () => {
-      setStatus('Room closed', 'error');
+      setStatus('Room closed by host', 'error');
       setTimeout(() => window.location.href = '/', 3000);
     });
-    
+
     socket.on('disconnect', () => {
+      console.log('❌ Disconnected from server');
       setStatus('Disconnected', 'error');
     });
-    
+
+    socket.on('connect_error', (err) => {
+      console.error('Connection error:', err.message);
+      setStatus('Connection error', 'error');
+    });
+
     // ═══════════════════════════════════════════════════════════
     // UI UPDATES
     // ═══════════════════════════════════════════════════════════
-    
+
     audio.addEventListener('timeupdate', () => {
-      if (!isNaN(audio.duration)) {
+      if (!isNaN(audio.duration) && audio.duration > 0) {
         const progress = (audio.currentTime / audio.duration) * 100;
-        document.getElementById('progressFill').style.width = `${progress}%`;
+        document.getElementById('progressFill').style.width = progress + '%';
         document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
       }
     });
-    
+
+    audio.addEventListener('loadedmetadata', () => {
+      document.getElementById('duration').textContent = formatTime(audio.duration);
+    });
+
     console.log('🎧 Listener initialized');
   </script>
 </body>
