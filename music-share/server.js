@@ -573,7 +573,9 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
 
     // ✅ FIX: Use the ACTUAL file ID from Appwrite response
     const actualFileId = uploadedFile.$id;
-    const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${actualFileId}/download?project=${process.env.APPWRITE_PROJECT_ID}`;
+    // Use server proxy instead of direct Appwrite URL
+    const fileUrl = `/audio/${roomCode}`;
+
 
 
     room.audioFileId = actualFileId;  // ← Use actual ID
@@ -625,6 +627,58 @@ app.get('/health', (req, res) => {
   });
 });
 
+
+
+// ═══════════════════════════════════════════════════════════
+// PROXY AUDIO FILE (CORS FIX FOR PRODUCTION)
+// ═══════════════════════════════════════════════════════════
+
+app.get('/audio/:roomCode', async (req, res) => {
+  try {
+    const roomCode = req.params.roomCode;
+    const room = rooms.get(roomCode);
+    
+    if (!room || !room.audioFileId) {
+      console.error('Audio not found for room:', roomCode);
+      return res.status(404).json({ error: 'Audio not found' });
+    }
+
+    console.log('📡 Proxying audio for room', roomCode, 'file:', room.audioFileId);
+
+    // Get file from Appwrite as buffer
+    const fileBuffer = await storage.getFileDownload(BUCKET_ID, room.audioFileId);
+
+    console.log('✅ File downloaded from Appwrite:', fileBuffer.byteLength, 'bytes');
+
+    // Set proper headers for audio streaming
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Length', fileBuffer.byteLength);
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    
+    res.send(fileBuffer);
+
+  } catch (err) {
+    console.error('❌ Proxy error:', err);
+    console.error('   Error type:', err.type);
+    console.error('   Error message:', err.message);
+    res.status(500).json({ error: 'Failed to load audio: ' + err.message });
+  }
+});
+
+// Handle OPTIONS for CORS preflight
+app.options('/audio/:roomCode', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range');
+  res.sendStatus(200);
+});
+
+
+
 // ═══════════════════════════════════════════════════════════
 // START SERVER
 // ═══════════════════════════════════════════════════════════
@@ -645,3 +699,4 @@ process.on('SIGINT', () => {
   console.log('\n⏹️ Shutting down...');
   process.exit(0);
 });
+
