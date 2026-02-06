@@ -6,8 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "init-db": "node init-db.js",
-    "dev": "node --watch server.js"
+    "build": "npm install && node init-db.js"
   },
   "keywords": ["music", "sync", "realtime", "socket.io"],
   "author": "Your Name",
@@ -20,5 +19,8 @@
     "multer": "^1.4.5-lts.1",
     "@supabase/supabase-js": "^2.39.0",
     "postgres": "^3.4.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
