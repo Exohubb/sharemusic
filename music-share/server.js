@@ -42,7 +42,7 @@ if (!BUCKET_ID || !process.env.APPWRITE_PROJECT_ID || !process.env.APPWRITE_API_
 }
 
 // ═══════════════════════════════════════════════════════════
-// SOCKET.IO WITH ENHANCED TIMING
+// SOCKET.IO CONFIGURATION
 // ═══════════════════════════════════════════════════════════
 
 const io = new Server(httpServer, { 
@@ -54,10 +54,8 @@ const io = new Server(httpServer, {
   maxHttpBufferSize: 1e8,
   pingTimeout: 10000,
   pingInterval: 5000,
-  // ✅ Enhanced for low latency
   transports: ['websocket', 'polling'],
-  upgradeTimeout: 3000,
-  allowUpgrades: true
+  upgradeTimeout: 3000
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -74,13 +72,12 @@ const upload = multer({
 });
 
 // ═══════════════════════════════════════════════════════════
-// ROOM SYSTEM WITH ENHANCED SYNC
+// ROOM SYSTEM
 // ═══════════════════════════════════════════════════════════
 
 const rooms = new Map();
-const AUTO_DELETE_TIMEOUT = 30 * 60 * 1000;
+const AUTO_DELETE_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
-// ✅ HIGH-PRECISION SERVER TIME
 function getHighPrecisionTime() {
   return Date.now() + (performance.now() % 1);
 }
@@ -93,11 +90,12 @@ function generateRoomCode() {
   return code;
 }
 
-function createRoom(hostSocketId, hostName) {
+function createRoom(hostSocketId, roomName, hostName) {
   const roomCode = generateRoomCode();
   
   const room = {
     code: roomCode,
+    roomName: roomName || `Room ${roomCode}`,
     hostSocketId: hostSocketId,
     hostName: hostName || 'Host',
     listeners: new Map(),
@@ -105,7 +103,7 @@ function createRoom(hostSocketId, hostName) {
     audioFileId: null,
     audioUrl: null,
     metadata: {
-      title: 'Unknown Track',
+      title: 'No track loaded',
       artist: 'Unknown Artist',
       duration: 0
     },
@@ -115,9 +113,7 @@ function createRoom(hostSocketId, hostName) {
     startOffset: 0,
     
     globalVolume: 1.0,
-    quality: 'standard',
     
-    // ✅ SYNC TRACKING
     lastSyncTime: null,
     syncInterval: null,
     
@@ -126,18 +122,17 @@ function createRoom(hostSocketId, hostName) {
   };
   
   rooms.set(roomCode, room);
-  console.log('🏠 Room created:', roomCode, 'by', hostName);
+  console.log('🏠 Room created:', roomCode, '-', room.roomName, 'by', hostName);
   
   room.autoDeleteTimer = setTimeout(() => {
     deleteRoom(roomCode);
   }, AUTO_DELETE_TIMEOUT);
   
-  // ✅ START CONTINUOUS SYNC BROADCAST
   room.syncInterval = setInterval(() => {
     if (room.isPlaying) {
       broadcastPreciseSync(roomCode);
     }
-  }, 1000); // Sync every second
+  }, 1000);
   
   broadcastRoomList();
   return room;
@@ -153,11 +148,13 @@ async function deleteRoom(roomCode) {
     clearInterval(room.syncInterval);
   }
   
+  // ✅ AUTO-DELETE AUDIO FILE FROM APPWRITE
   if (room.audioFileId) {
     try {
       await storage.deleteFile(BUCKET_ID, room.audioFileId);
+      console.log('   ✅ Deleted audio file from Appwrite:', room.audioFileId);
     } catch (err) {
-      console.error('Error deleting file:', err.message);
+      console.error('   ⚠️ Error deleting file:', err.message);
     }
   }
   
@@ -168,38 +165,41 @@ async function deleteRoom(roomCode) {
   io.to(roomCode).emit('room-closed');
   rooms.delete(roomCode);
   broadcastRoomList();
+  
+  console.log('   ✅ Room deleted successfully');
 }
 
 function broadcastRoomList() {
   const roomList = Array.from(rooms.values()).map(room => ({
-    roomId: room.code,
+    roomCode: room.code,
+    roomName: room.roomName,
     hostName: room.hostName,
     listenerCount: room.listeners.size,
-    playing: room.isPlaying,
-    hasFile: !!room.audioUrl,
-    metadata: room.metadata
+    isPlaying: room.isPlaying,
+    hasAudio: !!room.audioUrl,
+    trackTitle: room.metadata.title,
+    createdAt: room.createdAt
   }));
   
   io.emit('room-list', roomList);
 }
 
 // ═══════════════════════════════════════════════════════════
-// ✅ ENHANCED PLAYBACK CONTROL WITH PRECISE TIMING
+// PLAYBACK CONTROL
 // ═══════════════════════════════════════════════════════════
 
 function startPlayback(roomCode, position = 0) {
   const room = rooms.get(roomCode);
   if (!room || !room.audioUrl) return;
 
-  // ✅ Schedule with buffer for network + audio loading
-  const scheduledStartTime = getHighPrecisionTime() + 1000; // 1 second buffer
+  const scheduledStartTime = getHighPrecisionTime() + 1500; // 1.5 second buffer
   
   room.isPlaying = true;
   room.scheduledStartTime = scheduledStartTime;
   room.startOffset = position;
   room.lastSyncTime = getHighPrecisionTime();
 
-  console.log(`▶️  Room ${roomCode}: Play scheduled at ${scheduledStartTime}, position ${position}ms`);
+  console.log(`▶️  Room ${roomCode}: Play at ${scheduledStartTime}, position ${position}ms`);
 
   io.to(roomCode).emit('sync:play', {
     scheduledStartTime: scheduledStartTime,
@@ -209,6 +209,7 @@ function startPlayback(roomCode, position = 0) {
   });
 
   broadcastRoomState(roomCode);
+  broadcastRoomList();
 }
 
 function pausePlayback(roomCode) {
@@ -232,6 +233,7 @@ function pausePlayback(roomCode) {
   });
 
   broadcastRoomState(roomCode);
+  broadcastRoomList();
 }
 
 function stopPlayback(roomCode) {
@@ -250,6 +252,7 @@ function stopPlayback(roomCode) {
   });
 
   broadcastRoomState(roomCode);
+  broadcastRoomList();
 }
 
 function seekPlayback(roomCode, position) {
@@ -279,7 +282,6 @@ function seekPlayback(roomCode, position) {
   broadcastRoomState(roomCode);
 }
 
-// ✅ NEW: CONTINUOUS SYNC BROADCAST
 function broadcastPreciseSync(roomCode) {
   const room = rooms.get(roomCode);
   if (!room || !room.isPlaying) return;
@@ -316,7 +318,6 @@ function broadcastRoomState(roomCode) {
     position: currentPosition,
     duration: room.metadata.duration,
     globalVolume: room.globalVolume,
-    quality: room.quality,
     metadata: room.metadata,
     hasFile: !!room.audioUrl,
     audioUrl: room.audioUrl,
@@ -337,9 +338,11 @@ function broadcastListenerList(roomCode) {
     muted: l.muted,
     ping: l.ping,
     clockOffset: l.clockOffset || 0,
+    manualDelay: l.manualDelay || 0,
     syncAccuracy: l.syncAccuracy || 'unknown',
     downloaded: l.downloaded || false,
-    synced: l.synced || false
+    synced: l.synced || false,
+    connected: true
   }));
 
   io.to(roomCode).emit('listener-list', listeners);
@@ -352,7 +355,6 @@ function broadcastListenerList(roomCode) {
 io.on('connection', (socket) => {
   console.log('🔌 Connected:', socket.id);
 
-  // ✅ ENHANCED NTP SYNC (Multiple samples for accuracy)
   socket.on('ntp:sync', (clientSendTime, callback) => {
     const serverReceiveTime = getHighPrecisionTime();
     const serverSendTime = getHighPrecisionTime();
@@ -366,22 +368,24 @@ io.on('connection', (socket) => {
 
   socket.on('get-rooms', (callback) => {
     const roomList = Array.from(rooms.values()).map(room => ({
-      roomId: room.code,
+      roomCode: room.code,
+      roomName: room.roomName,
       hostName: room.hostName,
       listenerCount: room.listeners.size,
-      playing: room.isPlaying,
-      hasFile: !!room.audioUrl,
-      metadata: room.metadata
+      isPlaying: room.isPlaying,
+      hasAudio: !!room.audioUrl,
+      trackTitle: room.metadata.title
     }));
     callback(roomList);
   });
 
-  socket.on('create-room', ({ hostName }, callback) => {
-    const room = createRoom(socket.id, hostName);
+  socket.on('create-room', ({ roomName, hostName }, callback) => {
+    const room = createRoom(socket.id, roomName, hostName);
     socket.join(room.code);
     callback({ 
       success: true, 
       roomCode: room.code,
+      roomName: room.roomName,
       hostName: room.hostName
     });
   });
@@ -400,17 +404,17 @@ io.on('connection', (socket) => {
     callback({
       success: true,
       roomState: {
+        roomName: room.roomName,
         playing: room.isPlaying,
         position: room.startOffset,
         metadata: room.metadata,
-        quality: room.quality,
         hasFile: !!room.audioUrl,
         audioUrl: room.audioUrl,
         serverTime: getHighPrecisionTime()
       }
     });
 
-    console.log('👑 Host joined room:', roomCode);
+    console.log('👑 Host rejoined room:', roomCode);
     setTimeout(() => broadcastListenerList(roomCode), 100);
   });
 
@@ -431,6 +435,7 @@ io.on('connection', (socket) => {
       muted: false,
       ping: 0,
       clockOffset: 0,
+      manualDelay: 0,
       syncAccuracy: 'calibrating',
       downloaded: false,
       synced: false,
@@ -448,6 +453,7 @@ io.on('connection', (socket) => {
     callback({
       success: true,
       roomCode,
+      roomName: room.roomName,
       hostName: room.hostName,
       audioUrl: room.audioUrl,
       currentState: {
@@ -456,7 +462,6 @@ io.on('connection', (socket) => {
         scheduledStartTime: room.scheduledStartTime,
         startOffset: room.startOffset,
         metadata: room.metadata,
-        quality: room.quality,
         serverTime: getHighPrecisionTime()
       }
     });
@@ -485,7 +490,6 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ✅ NEW: Update listener sync stats
   socket.on('update-sync-stats', ({ roomCode, clockOffset, syncAccuracy }) => {
     const room = rooms.get(roomCode);
     if (!room) return;
@@ -529,6 +533,7 @@ io.on('connection', (socket) => {
     broadcastRoomState(roomCode);
   });
 
+  // ✅ HOST CONTROLS INDIVIDUAL LISTENER VOLUME
   socket.on('set-listener-volume', ({ roomCode, listenerId, volume }) => {
     const room = rooms.get(roomCode);
     if (!room || socket.id !== room.hostSocketId) return;
@@ -540,6 +545,7 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ✅ HOST MUTES INDIVIDUAL LISTENER
   socket.on('mute-listener', ({ roomCode, listenerId, muted }) => {
     const room = rooms.get(roomCode);
     if (!room || socket.id !== room.hostSocketId) return;
@@ -551,11 +557,17 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('set-quality', ({ roomCode, quality }) => {
+  // ✅ HOST ADJUSTS INDIVIDUAL LISTENER DELAY
+  socket.on('set-listener-delay', ({ roomCode, listenerId, delay }) => {
     const room = rooms.get(roomCode);
     if (!room || socket.id !== room.hostSocketId) return;
-    room.quality = quality;
-    broadcastRoomState(roomCode);
+    const listener = room.listeners.get(listenerId);
+    if (listener) {
+      listener.manualDelay = delay;
+      io.to(listenerId).emit('delay-update', { delay });
+      broadcastListenerList(roomCode);
+      console.log(`⏱️ Host set delay for ${listener.name}: ${delay}ms`);
+    }
   });
 
   socket.on('update-ping', ({ roomCode, ping }) => {
@@ -568,22 +580,24 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('ping-request', () => {
-    socket.emit('pong-response');
-  });
-
   socket.on('disconnect', () => {
     console.log('🔌 Disconnected:', socket.id);
+    
     for (const [roomCode, room] of rooms) {
       if (room.hostSocketId === socket.id) {
+        // Host disconnected - delete room after 30 seconds
         setTimeout(() => {
           const currentRoom = rooms.get(roomCode);
           if (currentRoom && currentRoom.hostSocketId === socket.id) {
+            console.log('⚠️ Host disconnected, deleting room:', roomCode);
             deleteRoom(roomCode);
           }
         }, 30000);
       }
+      
       if (room.listeners.has(socket.id)) {
+        const listener = room.listeners.get(socket.id);
+        console.log(`👋 ${listener.name} left room ${roomCode}`);
         room.listeners.delete(socket.id);
         broadcastListenerList(roomCode);
       }
@@ -610,12 +624,19 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
 
     console.log(`📤 Uploading: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)} MB)`);
 
+    // ✅ DELETE OLD FILE BEFORE UPLOADING NEW ONE
     if (room.audioFileId) {
       try {
         await storage.deleteFile(BUCKET_ID, room.audioFileId);
+        console.log('   ✅ Deleted old file:', room.audioFileId);
       } catch (err) {
-        console.warn('Could not delete old file');
+        console.warn('   ⚠️ Could not delete old file:', err.message);
       }
+    }
+
+    // Stop playback before changing song
+    if (room.isPlaying) {
+      stopPlayback(roomCode);
     }
 
     const fileId = ID.unique();
@@ -639,6 +660,12 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       duration: 0
     };
 
+    // Reset all listeners' download status
+    room.listeners.forEach(listener => {
+      listener.downloaded = false;
+      listener.synced = false;
+    });
+
     io.to(roomCode).emit('file:ready', { 
       url: room.audioUrl,
       metadata: room.metadata 
@@ -652,6 +679,7 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
     });
 
     broadcastRoomState(roomCode);
+    broadcastListenerList(roomCode);
     broadcastRoomList();
 
     console.log('✅ Upload complete');
@@ -670,7 +698,8 @@ app.get('/health', (req, res) => {
     status: 'ok', 
     timestamp: Date.now(),
     highPrecision: getHighPrecisionTime(),
-    rooms: rooms.size
+    rooms: rooms.size,
+    totalListeners: Array.from(rooms.values()).reduce((sum, r) => sum + r.listeners.size, 0)
   });
 });
 
@@ -682,15 +711,22 @@ const PORT = process.env.PORT || 3000;
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 ════════════════════════════════════════');
-  console.log('   MUSIC SHARE SERVER (ENHANCED SYNC)');
+  console.log('   PROFESSIONAL MUSIC SYNC SERVER');
   console.log('   ════════════════════════════════════════');
   console.log(`   🌐 Port: ${PORT}`);
   console.log(`   ⏱️  High-Precision Timing: Enabled`);
-  console.log(`   🔄 Continuous Sync: Enabled`);
+  console.log(`   🎛️  Individual Delay Control: Enabled`);
+  console.log(`   🗑️  Auto File Cleanup: Enabled`);
   console.log('════════════════════════════════════════\n');
 });
 
 process.on('SIGINT', () => {
   console.log('\n⏹️ Shutting down...');
+  
+  // Clean up all rooms
+  for (const [roomCode, room] of rooms) {
+    deleteRoom(roomCode);
+  }
+  
   process.exit(0);
 });
