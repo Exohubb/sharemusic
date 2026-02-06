@@ -1,404 +1,642 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Sync - Professional Audio Synchronization</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>Music Sync – Professional Audio Synchronization</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
       min-height: 100vh;
-      color: white;
+      color: #f9fafb;
+      display: flex;
+      flex-direction: column;
       overflow-x: hidden;
     }
-    
+
+    /* Navbar */
     .navbar {
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(10px);
-      padding: 20px 0;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
-    
-    .navbar-content {
-      max-width: 1200px;
+
+    .navbar-inner {
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 0 20px;
+      padding: 16px 20px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
+      gap: 16px;
     }
-    
-    .logo {
+
+    .brand {
       display: flex;
       align-items: center;
-      gap: 15px;
-      font-size: 1.8em;
-      font-weight: bold;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
     }
-    
-    .logo-icon {
-      font-size: 2em;
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a5b4fc, #4f46e5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.5);
     }
-    
-    .container {
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 0 20px;
+
+    .badge-rooms {
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.2);
+      border: 1.5px solid rgba(74, 222, 128, 0.6);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4ade80;
+      white-space: nowrap;
+      animation: pulse-badge 2s infinite;
     }
-    
+
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+      width: 100%;
+    }
+
+    /* Hero Section */
     .hero {
       text-align: center;
-      margin-bottom: 60px;
-      padding: 40px 20px;
+      padding: 20px 16px 32px;
+      animation: fadeInUp 0.6s ease-out;
     }
-    
-    .hero h1 {
-      font-size: 3em;
-      margin-bottom: 15px;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
-    
-    .hero p {
-      font-size: 1.2em;
+
+    .hero-title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff, #e0e7ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
       opacity: 0.9;
       max-width: 600px;
       margin: 0 auto;
+      line-height: 1.6;
     }
-    
-    .create-room-section {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
+
+    /* Grid Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 1024px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card */
+    .card {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(24px);
       border-radius: 20px;
-      padding: 40px;
-      margin-bottom: 40px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      padding: 24px;
+      animation: fadeInUp 0.6s ease-out;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    
-    .create-room-section h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2em;
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
     }
-    
-    .form-group {
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
     }
-    
-    .form-group label {
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill {
+      font-size: 0.75rem;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(79, 70, 229, 0.2);
+      border: 1px solid rgba(129, 140, 248, 0.5);
+      color: #a5b4fc;
+      font-weight: 600;
+    }
+
+    /* Form Fields */
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
       display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
       margin-bottom: 8px;
-      font-weight: 500;
-      font-size: 1.1em;
+      opacity: 0.9;
     }
-    
-    .form-group input {
+
+    .input {
       width: 100%;
-      padding: 15px 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 12px 14px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      font-size: 1.1em;
-      transition: all 0.3s;
-    }
-    
-    .form-group input:focus {
+      border: 1.5px solid rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.8);
+      color: #f9fafb;
+      font-size: 0.95rem;
       outline: none;
-      border-color: #4ade80;
-      background: rgba(255, 255, 255, 0.15);
+      transition: all 0.2s ease;
     }
-    
-    .form-group input::placeholder {
-      color: rgba(255, 255, 255, 0.5);
+
+    .input::placeholder {
+      color: rgba(148, 163, 184, 0.6);
     }
-    
+
+    .input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    /* Button */
     .btn {
       width: 100%;
-      padding: 18px;
+      padding: 14px 20px;
       border: none;
       border-radius: 12px;
-      font-size: 1.2em;
-      font-weight: bold;
+      font-size: 0.95rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.3s;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.02em;
     }
-    
+
     .btn-primary {
-      background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-      color: white;
-      box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4);
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #ffffff;
+      box-shadow: 0 10px 30px rgba(79, 70, 229, 0.5);
     }
-    
-    .btn-primary:hover {
+
+    .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(74, 222, 128, 0.6);
+      box-shadow: 0 14px 40px rgba(79, 70, 229, 0.7);
     }
-    
-    .btn-primary:active {
+
+    .btn-primary:active:not(:disabled) {
       transform: translateY(0);
     }
-    
-    .rooms-section {
-      margin-top: 60px;
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
-    
+
+    .btn-secondary {
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      border: 1.5px solid rgba(148, 163, 184, 0.5);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(30, 41, 59, 0.9);
+      border-color: rgba(129, 140, 248, 0.8);
+    }
+
+    .error-text {
+      font-size: 0.85rem;
+      color: #fca5a5;
+      margin-top: 8px;
+      min-height: 1.2em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Rooms Section */
     .rooms-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 30px;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
     }
-    
-    .rooms-header h2 {
-      font-size: 2em;
+
+    .rooms-count {
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0.85;
     }
-    
-    .room-count {
-      background: rgba(255, 255, 255, 0.2);
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-weight: bold;
+
+    .rooms-container {
+      min-height: 200px;
     }
-    
-    .rooms-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 25px;
+
+    .rooms-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 8px;
     }
-    
+
+    .rooms-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .rooms-list::-webkit-scrollbar-track {
+      background: rgba(148, 163, 184, 0.1);
+      border-radius: 999px;
+    }
+
+    .rooms-list::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.5);
+      border-radius: 999px;
+    }
+
+    .rooms-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.7);
+    }
+
+    /* Room Card */
     .room-card {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 25px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(15, 23, 42, 0.95));
+      border: 1.5px solid rgba(148, 163, 184, 0.3);
+      border-radius: 14px;
+      padding: 16px;
       cursor: pointer;
-      transition: all 0.3s;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      position: relative;
-      overflow: hidden;
+      transition: all 0.2s ease;
+      animation: slideInRight 0.4s ease-out;
     }
-    
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
     .room-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      border-color: #4ade80;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(79, 70, 229, 0.4);
+      border-color: #4f46e5;
     }
-    
-    .room-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, #4ade80, #22c55e);
+
+    .room-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
     }
-    
+
+    .room-name {
+      font-weight: 700;
+      font-size: 1.05rem;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .room-status {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 15px;
-      font-size: 0.9em;
-    }
-    
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
       gap: 5px;
-      padding: 5px 12px;
-      border-radius: 15px;
-      font-size: 0.85em;
-      font-weight: bold;
+      white-space: nowrap;
     }
-    
-    .status-badge.playing {
-      background: rgba(74, 222, 128, 0.3);
+
+    .room-status.playing {
+      background: rgba(34, 197, 94, 0.2);
       color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.6);
     }
-    
-    .status-badge.idle {
-      background: rgba(251, 191, 36, 0.3);
+
+    .room-status.idle {
+      background: rgba(251, 191, 36, 0.2);
       color: #fbbf24;
+      border: 1px solid rgba(252, 211, 77, 0.6);
     }
-    
-    .pulse {
+
+    .pulse-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
       background: currentColor;
-      animation: pulse 2s infinite;
+      animation: pulse-dot 1.5s infinite;
     }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+
+    @keyframes pulse-dot {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.3;
+        transform: scale(0.8);
+      }
     }
-    
-    .room-name {
-      font-size: 1.4em;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: white;
+
+    .room-meta {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
     }
-    
-    .room-host {
-      font-size: 0.95em;
+
+    .room-track {
+      font-size: 0.85rem;
       opacity: 0.8;
       margin-bottom: 10px;
-    }
-    
-    .room-track {
-      font-size: 0.9em;
-      opacity: 0.7;
-      margin-bottom: 15px;
-      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    
-    .room-stats {
+
+    .room-footer {
       display: flex;
-      gap: 15px;
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
     }
-    
-    .stat {
-      display: flex;
+
+    .tag {
+      display: inline-flex;
       align-items: center;
       gap: 5px;
-      font-size: 0.9em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 0.75rem;
     }
-    
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
-      border: 2px dashed rgba(255, 255, 255, 0.3);
-    }
-    
-    .empty-state-icon {
-      font-size: 4em;
-      margin-bottom: 20px;
-      opacity: 0.5;
-    }
-    
-    .empty-state h3 {
-      font-size: 1.5em;
-      margin-bottom: 10px;
-    }
-    
-    .empty-state p {
+
+    .room-hint {
+      font-size: 0.75rem;
       opacity: 0.7;
     }
-    
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(10px);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      border: 2px dashed rgba(148, 163, 184, 0.4);
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.6);
     }
-    
-    .modal.active {
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
+
+    .empty-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+
+    .empty-subtitle {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-backdrop.show {
       display: flex;
     }
-    
-    .modal-content {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(20px);
+
+    .modal {
+      background: rgba(15, 23, 42, 0.98);
       border-radius: 20px;
-      padding: 40px;
-      max-width: 500px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
       width: 100%;
-      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      max-width: 460px;
+      padding: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      animation: scaleIn 0.3s ease-out;
     }
-    
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
     }
-    
-    .modal-header h3 {
-      font-size: 1.8em;
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
     }
-    
-    .close-btn {
-      background: none;
+
+    .modal-close {
       border: none;
-      color: white;
-      font-size: 2em;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 1.5rem;
       cursor: pointer;
       opacity: 0.7;
-      transition: opacity 0.3s;
+      transition: opacity 0.2s;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
     }
-    
-    .close-btn:hover {
+
+    .modal-close:hover {
       opacity: 1;
+      background: rgba(148, 163, 184, 0.2);
     }
-    
-    .modal-buttons {
+
+    .modal-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-top: 25px;
+      gap: 12px;
+      margin-top: 20px;
     }
-    
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
+
+    /* Loading Indicator */
+    .loading-indicator {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
-    
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.3);
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
-    
+
     /* Responsive */
     @media (max-width: 768px) {
-      .hero h1 {
-        font-size: 2em;
+      .navbar-inner {
+        padding: 12px 16px;
       }
-      
-      .hero p {
-        font-size: 1em;
+
+      .brand {
+        font-size: 1.1rem;
       }
-      
-      .create-room-section {
-        padding: 25px;
+
+      .brand-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
       }
-      
-      .rooms-grid {
+
+      .badge-rooms {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+      }
+
+      .main {
+        padding: 24px 16px 32px;
+      }
+
+      .hero {
+        padding: 16px 12px 24px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .card-title {
+        font-size: 1.15rem;
+      }
+
+      .modal-actions {
         grid-template-columns: 1fr;
       }
-      
-      .modal-content {
-        padding: 25px;
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 1.75rem;
       }
-      
-      .modal-buttons {
-        grid-template-columns: 1fr;
+
+      .room-main {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .room-status {
+        align-self: flex-start;
       }
     }
   </style>
@@ -406,225 +644,303 @@
 <body>
   <!-- Navbar -->
   <nav class="navbar">
-    <div class="navbar-content">
-      <div class="logo">
-        <span class="logo-icon">🎵</span>
+    <div class="navbar-inner">
+      <div class="brand">
+        <div class="brand-icon">🎵</div>
         <span>Music Sync</span>
       </div>
-      <div class="room-count" id="globalRoomCount">
-        0 Active Rooms
+      <div class="badge-rooms" id="globalRoomsBadge">
+        <span id="globalRoomsCount">0</span> active rooms
       </div>
     </div>
   </nav>
 
-  <!-- Main Container -->
-  <div class="container">
-    <!-- Hero Section -->
-    <div class="hero">
-      <h1>🎧 Professional Audio Synchronization</h1>
-      <p>Create a room, invite friends, and listen to music in perfect sync across multiple devices</p>
-    </div>
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Hero -->
+    <section class="hero">
+      <h1 class="hero-title">🎧 Listen Together, Perfectly Synced</h1>
+      <p class="hero-subtitle">
+        Create a room, upload your favorite tracks, and sync playback across unlimited devices with millisecond precision.
+      </p>
+    </section>
 
-    <!-- Create Room Section -->
-    <div class="create-room-section">
-      <h2>🎙️ Create Your Room</h2>
-      <form id="createRoomForm">
-        <div class="form-group">
-          <label for="roomName">Room Name</label>
-          <input 
-            type="text" 
-            id="roomName" 
-            placeholder="My Awesome Music Room"
-            maxlength="50"
-            required
-          >
+    <!-- Grid -->
+    <div class="grid">
+      <!-- Create Room Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎙️ Create Room</div>
+          <div class="pill">Host Panel</div>
         </div>
-        <div class="form-group">
-          <label for="hostName">Your Name (Host)</label>
-          <input 
-            type="text" 
-            id="hostName" 
-            placeholder="DJ Master"
-            maxlength="30"
-            required
-          >
-        </div>
-        <button type="submit" class="btn btn-primary">
-          🚀 Create Room
-        </button>
-      </form>
-    </div>
 
-    <!-- Active Rooms Section -->
-    <div class="rooms-section">
-      <div class="rooms-header">
-        <h2>🏠 Active Rooms</h2>
-        <div class="room-count" id="roomCount">0 Rooms</div>
+        <form id="createRoomForm" autocomplete="off">
+          <div class="field">
+            <label for="roomName">Room Name</label>
+            <input
+              type="text"
+              id="roomName"
+              class="input"
+              placeholder="Friday Night Vibes"
+              maxlength="50"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label for="hostName">Your Name (Host)</label>
+            <input
+              type="text"
+              id="hostName"
+              class="input"
+              placeholder="DJ Master"
+              maxlength="30"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="createBtn">
+            <span>🚀 Start Hosting</span>
+          </button>
+
+          <div class="error-text" id="createError"></div>
+        </form>
       </div>
-      
-      <div id="roomsContainer">
-        <div class="empty-state">
-          <div class="empty-state-icon">🎵</div>
-          <h3>No Active Rooms</h3>
-          <p>Be the first to create a room!</p>
+
+      <!-- Available Rooms Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏠 Available Rooms</div>
+          <div class="rooms-count" id="roomsCount">0 rooms</div>
+        </div>
+
+        <div class="rooms-container" id="roomsContainer">
+          <div class="empty-state">
+            <div class="empty-icon">🎵</div>
+            <div class="empty-title">No Active Rooms</div>
+            <div class="empty-subtitle">Create the first room to get started!</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 
   <!-- Join Room Modal -->
-  <div class="modal" id="joinModal">
-    <div class="modal-content">
+  <div class="modal-backdrop" id="joinModalBackdrop">
+    <div class="modal">
       <div class="modal-header">
-        <h3>Join Room</h3>
-        <button class="close-btn" onclick="closeJoinModal()">&times;</button>
+        <div class="modal-title">Join Room</div>
+        <button type="button" class="modal-close" id="joinModalClose">&times;</button>
       </div>
-      
-      <div class="form-group">
-        <label>Room Name</label>
-        <input type="text" id="selectedRoomName" readonly style="opacity: 0.7;">
-      </div>
-      
-      <div class="form-group">
-        <label for="listenerName">Your Name</label>
-        <input 
-          type="text" 
-          id="listenerName" 
-          placeholder="Listener"
-          maxlength="30"
-          required
-        >
-      </div>
-      
-      <div class="form-group">
-        <label for="joinCode">Room Code (4 digits)</label>
-        <input 
-          type="text" 
-          id="joinCode" 
-          placeholder="1234"
-          maxlength="4"
-          pattern="[0-9]{4}"
-          required
-        >
-      </div>
-      
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeJoinModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="joinRoom()">Join</button>
+
+      <div>
+        <div class="field">
+          <label>Room Name</label>
+          <input type="text" id="joinRoomName" class="input" readonly style="opacity: 0.7;" />
+        </div>
+
+        <div class="field">
+          <label for="listenerName">Your Name</label>
+          <input
+            type="text"
+            id="listenerName"
+            class="input"
+            placeholder="Listener"
+            maxlength="30"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="joinCode">Room Code (4 digits)</label>
+          <input
+            type="text"
+            id="joinCode"
+            class="input"
+            placeholder="1234"
+            maxlength="4"
+            inputmode="numeric"
+            pattern="[0-9]{4}"
+            required
+          />
+        </div>
+
+        <div class="error-text" id="joinError"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="joinCancelBtn">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" id="joinConfirmBtn">
+            Join
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
+    // ═══════════════════════════════════════════════════════════
+    // SOCKET.IO CONNECTION
+    // ═══════════════════════════════════════════════════════════
+
+    const socket = io({
+      transports: ['websocket', 'polling'],
+      upgrade: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5
+    });
+
+    // DOM Elements
+    const createForm = document.getElementById('createRoomForm');
+    const createBtn = document.getElementById('createBtn');
+    const createError = document.getElementById('createError');
+    const roomsContainer = document.getElementById('roomsContainer');
+    const roomsCount = document.getElementById('roomsCount');
+    const globalRoomsCount = document.getElementById('globalRoomsCount');
+
+    const joinModalBackdrop = document.getElementById('joinModalBackdrop');
+    const joinModalClose = document.getElementById('joinModalClose');
+    const joinCancelBtn = document.getElementById('joinCancelBtn');
+    const joinConfirmBtn = document.getElementById('joinConfirmBtn');
+    const joinRoomName = document.getElementById('joinRoomName');
+    const joinCode = document.getElementById('joinCode');
+    const listenerName = document.getElementById('listenerName');
+    const joinError = document.getElementById('joinError');
+
     let selectedRoomCode = null;
+    let isCreatingRoom = false;
+
+    // ═══════════════════════════════════════════════════════════
+    // UTILITY FUNCTIONS
+    // ═══════════════════════════════════════════════════════════
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    function showError(element, message) {
+      element.innerHTML = `⚠️ ${escapeHtml(message)}`;
+    }
+
+    function clearError(element) {
+      element.textContent = '';
+    }
 
     // ═══════════════════════════════════════════════════════════
     // CREATE ROOM
     // ═══════════════════════════════════════════════════════════
 
-    document.getElementById('createRoomForm').addEventListener('submit', (e) => {
+    createForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
+
+      if (isCreatingRoom) return;
+
+      clearError(createError);
+
       const roomName = document.getElementById('roomName').value.trim();
       const hostName = document.getElementById('hostName').value.trim();
-      
+
       if (!roomName || !hostName) {
-        alert('Please fill in all fields');
+        showError(createError, 'Please fill in all fields');
         return;
       }
-      
-      console.log('Creating room:', roomName);
-      
+
+      isCreatingRoom = true;
+      createBtn.disabled = true;
+      createBtn.innerHTML = '<span class="loading-indicator"></span> Creating...';
+
       socket.emit('create-room', { roomName, hostName }, (response) => {
-        if (response.success) {
-          console.log('✅ Room created:', response.roomCode);
-          window.location.href = `/host.html?room=${response.roomCode}`;
-        } else {
-          alert('Failed to create room: ' + (response.error || 'Unknown error'));
+        isCreatingRoom = false;
+        createBtn.disabled = false;
+        createBtn.innerHTML = '<span>🚀 Start Hosting</span>';
+
+        if (!response || !response.success) {
+          showError(createError, response?.error || 'Failed to create room');
+          return;
         }
+
+        console.log('✅ Room created:', response.roomCode);
+
+        // Redirect to host panel
+        window.location.href = `/host.html?room=${encodeURIComponent(response.roomCode)}`;
       });
     });
 
     // ═══════════════════════════════════════════════════════════
-    // ROOM LIST
+    // RENDER ROOMS LIST (INSTANT UPDATES)
     // ═══════════════════════════════════════════════════════════
 
-    socket.on('room-list', (rooms) => {
-      console.log('📋 Room list updated:', rooms.length, 'rooms');
-      
-      const container = document.getElementById('roomsContainer');
-      const roomCountEl = document.getElementById('roomCount');
-      const globalRoomCountEl = document.getElementById('globalRoomCount');
-      
-      roomCountEl.textContent = `${rooms.length} Room${rooms.length !== 1 ? 's' : ''}`;
-      globalRoomCountEl.textContent = `${rooms.length} Active Room${rooms.length !== 1 ? 's' : ''}`;
-      
-      if (rooms.length === 0) {
-        container.innerHTML = `
+    function renderRooms(rooms) {
+      const count = rooms.length;
+
+      // Update counts
+      roomsCount.textContent = count === 1 ? '1 room' : `${count} rooms`;
+      globalRoomsCount.textContent = count;
+
+      if (!count) {
+        roomsContainer.innerHTML = `
           <div class="empty-state">
-            <div class="empty-state-icon">🎵</div>
-            <h3>No Active Rooms</h3>
-            <p>Be the first to create a room!</p>
+            <div class="empty-icon">🎵</div>
+            <div class="empty-title">No Active Rooms</div>
+            <div class="empty-subtitle">Create the first room to get started!</div>
           </div>
         `;
         return;
       }
-      
-      container.innerHTML = `
-        <div class="rooms-grid">
-          ${rooms.map(room => createRoomCard(room)).join('')}
-        </div>
-      `;
-      
-      // Add click handlers
+
+      // Sort by most recent
+      const sortedRooms = rooms.slice().sort((a, b) => b.createdAt - a.createdAt);
+
+      const roomsHtml = sortedRooms.map(room => {
+        const statusClass = room.isPlaying ? 'playing' : 'idle';
+        const statusText = room.isPlaying ? 'Playing' : 'Idle';
+        const trackDisplay = room.hasAudio 
+          ? `🎵 ${room.trackTitle}` 
+          : '⏸️ No track loaded';
+
+        return `
+          <div class="room-card" 
+               data-room-code="${room.roomCode}" 
+               data-room-name="${escapeHtml(room.roomName)}">
+            <div class="room-main">
+              <div class="room-name">${escapeHtml(room.roomName)}</div>
+              <div class="room-status ${statusClass}">
+                <span class="pulse-dot"></span>
+                <span>${statusText}</span>
+              </div>
+            </div>
+            <div class="room-meta">
+              <span>👤 ${escapeHtml(room.hostName)}</span>
+              <span>👥 ${room.listenerCount} listener${room.listenerCount !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="room-track">${escapeHtml(trackDisplay)}</div>
+            <div class="room-footer">
+              <div class="tag">
+                <span>🔐</span>
+                <span>Code required</span>
+              </div>
+              <div class="room-hint">Click to join</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      roomsContainer.innerHTML = `<div class="rooms-list">${roomsHtml}</div>`;
+
+      // Attach click handlers
       document.querySelectorAll('.room-card').forEach(card => {
         card.addEventListener('click', () => {
-          const roomCode = card.dataset.roomCode;
-          const roomName = card.dataset.roomName;
-          openJoinModal(roomCode, roomName);
+          const code = card.getAttribute('data-room-code');
+          const name = card.getAttribute('data-room-name');
+          openJoinModal(code, name);
         });
       });
-    });
-
-    function createRoomCard(room) {
-      const statusClass = room.isPlaying ? 'playing' : 'idle';
-      const statusText = room.isPlaying ? 'Playing' : 'Idle';
-      
-      return `
-        <div class="room-card" data-room-code="${room.roomCode}" data-room-name="${room.roomName}">
-          <div class="room-status">
-            <span class="status-badge ${statusClass}">
-              <span class="pulse"></span>
-              ${statusText}
-            </span>
-          </div>
-          
-          <div class="room-name">${escapeHtml(room.roomName)}</div>
-          <div class="room-host">🎤 Host: ${escapeHtml(room.hostName)}</div>
-          <div class="room-track">
-            ${room.hasAudio ? '🎵 ' + escapeHtml(room.trackTitle) : '⏸️ No track loaded'}
-          </div>
-          
-          <div class="room-stats">
-            <div class="stat">
-              <span>👥</span>
-              <span>${room.listenerCount} ${room.listenerCount === 1 ? 'Listener' : 'Listeners'}</span>
-            </div>
-            <div class="stat">
-              <span>🔑</span>
-              <span>Code Required</span>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -633,61 +949,96 @@
 
     function openJoinModal(roomCode, roomName) {
       selectedRoomCode = roomCode;
-      document.getElementById('selectedRoomName').value = roomName;
-      document.getElementById('joinCode').value = '';
-      document.getElementById('listenerName').value = '';
-      document.getElementById('joinModal').classList.add('active');
+      joinRoomName.value = roomName;
+      joinCode.value = '';
+      listenerName.value = '';
+      clearError(joinError);
+      joinModalBackdrop.classList.add('show');
+      setTimeout(() => listenerName.focus(), 100);
     }
 
     function closeJoinModal() {
-      document.getElementById('joinModal').classList.remove('active');
+      joinModalBackdrop.classList.remove('show');
       selectedRoomCode = null;
     }
 
-    function joinRoom() {
-      const listenerName = document.getElementById('listenerName').value.trim();
-      const joinCode = document.getElementById('joinCode').value.trim();
-      
-      if (!listenerName) {
-        alert('Please enter your name');
-        return;
-      }
-      
-      if (!joinCode || joinCode.length !== 4) {
-        alert('Please enter a valid 4-digit room code');
-        return;
-      }
-      
-      if (joinCode !== selectedRoomCode) {
-        alert('Invalid room code. Please ask the host for the correct code.');
-        return;
-      }
-      
-      console.log('Joining room:', selectedRoomCode);
-      window.location.href = `/listener.html?room=${selectedRoomCode}&name=${encodeURIComponent(listenerName)}`;
-    }
+    joinModalClose.addEventListener('click', closeJoinModal);
+    joinCancelBtn.addEventListener('click', closeJoinModal);
 
-    // Close modal on Escape key
+    joinModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === joinModalBackdrop) closeJoinModal();
+    });
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && joinModalBackdrop.classList.contains('show')) {
         closeJoinModal();
       }
     });
 
+    joinConfirmBtn.addEventListener('click', () => {
+      clearError(joinError);
+
+      const code = joinCode.value.trim();
+      const name = listenerName.value.trim();
+
+      if (!name) {
+        showError(joinError, 'Please enter your name');
+        return;
+      }
+
+      if (!/^\d{4}$/.test(code)) {
+        showError(joinError, 'Code must be exactly 4 digits');
+        return;
+      }
+
+      if (code !== selectedRoomCode) {
+        showError(joinError, 'Incorrect code. Ask the host for the correct code.');
+        return;
+      }
+
+      // Redirect to listener page
+      window.location.href = `/listener.html?room=${encodeURIComponent(selectedRoomCode)}&name=${encodeURIComponent(name)}`;
+    });
+
+    // Enter key in join code field
+    joinCode.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        joinConfirmBtn.click();
+      }
+    });
+
     // ═══════════════════════════════════════════════════════════
-    // INITIAL LOAD
+    // SOCKET.IO EVENTS
     // ═══════════════════════════════════════════════════════════
 
     socket.on('connect', () => {
       console.log('✅ Connected to server');
+
+      // Request initial room list
       socket.emit('get-rooms', (rooms) => {
-        socket.emit('room-list', rooms);
+        renderRooms(rooms || []);
       });
+    });
+
+    // ✅ INSTANT ROOM LIST UPDATES
+    socket.on('room-list', (rooms) => {
+      console.log('📋 Room list updated:', rooms.length, 'rooms');
+      renderRooms(rooms || []);
     });
 
     socket.on('disconnect', () => {
       console.log('❌ Disconnected from server');
     });
+
+    socket.on('connect_error', (err) => {
+      console.error('Connection error:', err.message);
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════════════════════════
+
+    console.log('🎵 Music Sync initialized');
   </script>
 </body>
 </html>
