@@ -630,7 +630,7 @@ app.get('/health', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════════
-// PROXY AUDIO FILE (CORS FIX FOR PRODUCTION)
+// PROXY AUDIO FILE (FIXED FOR APPWRITE NODE SDK)
 // ═══════════════════════════════════════════════════════════
 
 app.get('/audio/:roomCode', async (req, res) => {
@@ -645,27 +645,63 @@ app.get('/audio/:roomCode', async (req, res) => {
 
     console.log('📡 Proxying audio for room', roomCode, 'file:', room.audioFileId);
 
-    // Get file from Appwrite as buffer
-    const fileBuffer = await storage.getFileDownload(BUCKET_ID, room.audioFileId);
+    // ✅ FIX: Use getFileDownload correctly - it returns a Buffer
+    const fileBuffer = await storage.getFileDownload(
+      BUCKET_ID,
+      room.audioFileId
+    );
 
-    console.log('✅ File downloaded from Appwrite:', fileBuffer.byteLength, 'bytes');
+    console.log('✅ File downloaded from Appwrite:', fileBuffer.length, 'bytes');
 
-    // Set proper headers for audio streaming
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Content-Length', fileBuffer.byteLength);
+    // Determine content type from filename
+    const ext = room.metadata?.title?.split('.').pop()?.toLowerCase() || 'mp3';
+    const contentTypes = {
+      'mp3': 'audio/mpeg',
+      'm4a': 'audio/mp4',
+      'wav': 'audio/wav',
+      'ogg': 'audio/ogg',
+      'flac': 'audio/flac',
+      'aac': 'audio/aac'
+    };
+    const contentType = contentTypes[ext] || 'audio/mpeg';
+
+    // Set headers for audio streaming
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Length', fileBuffer.length);
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Cache-Control', 'public, max-age=3600');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Range');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
     
-    res.send(fileBuffer);
+    // Handle range requests for seeking
+    const range = req.headers.range;
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileBuffer.length - 1;
+      const chunkSize = (end - start) + 1;
+      
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileBuffer.length}`);
+      res.setHeader('Content-Length', chunkSize);
+      res.send(fileBuffer.slice(start, end + 1));
+    } else {
+      res.send(fileBuffer);
+    }
+
+    console.log('✅ Audio sent to client');
 
   } catch (err) {
     console.error('❌ Proxy error:', err);
+    console.error('   Error code:', err.code);
     console.error('   Error type:', err.type);
     console.error('   Error message:', err.message);
-    res.status(500).json({ error: 'Failed to load audio: ' + err.message });
+    
+    res.status(500).json({ 
+      error: 'Failed to load audio',
+      details: err.message 
+    });
   }
 });
 
@@ -673,10 +709,9 @@ app.get('/audio/:roomCode', async (req, res) => {
 app.options('/audio/:roomCode', (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Range');
+  res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
   res.sendStatus(200);
 });
-
 
 
 // ═══════════════════════════════════════════════════════════
@@ -699,4 +734,5 @@ process.on('SIGINT', () => {
   console.log('\n⏹️ Shutting down...');
   process.exit(0);
 });
+
 
