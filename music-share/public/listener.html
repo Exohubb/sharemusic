@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎧 Listener</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container { max-width: 500px; width: 100%; }
+    .player-card {
+      background: white;
+      border-radius: 30px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .room-badge {
+      background: #667eea;
+      color: white;
+      display: inline-block;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+    .header h1 { font-size: 28px; color: #1f2937; margin-bottom: 10px; }
+    .header .subtitle { font-size: 14px; color: #6b7280; }
+    
+    /* Album Art */
+    .album-art {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      transition: all 0.3s;
+    }
+    .album-art.playing {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+        transform: scale(1);
+      }
+      50% { 
+        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5); 
+        transform: scale(1.02);
+      }
+    }
+    
+    /* Track Info */
+    .track-info {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .track-title { 
+      font-size: 20px; 
+      font-weight: bold; 
+      color: #1f2937; 
+      margin-bottom: 8px; 
+    }
+    .track-artist { 
+      font-size: 16px; 
+      color: #6b7280; 
+    }
+    
+    /* Status */
+    .status {
+      background: #f9fafb;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+    }
+    .status.downloading { 
+      background: #dbeafe; 
+      color: #1e40af; 
+    }
+    .status.ready { 
+      background: #d1fae5; 
+      color: #065f46; 
+    }
+    .status.playing {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    .status.error { 
+      background: #fee2e2; 
+      color: #991b1b; 
+    }
+    .status-icon { 
+      font-size: 40px; 
+      margin-bottom: 10px; 
+    }
+    .status-text { 
+      font-size: 16px; 
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .status-subtext {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+    
+    /* Sync Info */
+    .sync-info {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 15px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      font-size: 13px;
+      display: none;
+    }
+    .sync-info.active { display: grid; }
+    .sync-card {
+      text-align: center;
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+    }
+    .sync-card .label {
+      color: #6b7280;
+      font-size: 11px;
+      margin-bottom: 5px;
+    }
+    .sync-card .value {
+      color: #1f2937;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .sync-card.good .value { color: #10b981; }
+    .sync-card.warning .value { color: #f59e0b; }
+    .sync-card.bad .value { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="player-card">
+      <div class="header">
+        <div class="room-badge">Room: <strong id="roomCode">----</strong></div>
+        <h1>🎧 Listener</h1>
+        <p class="subtitle" id="listenerName">Connecting...</p>
+      </div>
+
+      <div class="album-art" id="albumArt">🎵</div>
+
+      <div class="track-info">
+        <div class="track-title" id="trackTitle">No Track Playing</div>
+        <div class="track-artist" id="trackArtist">Waiting for host...</div>
+      </div>
+
+      <div class="status" id="status">
+        <div class="status-icon">🔊</div>
+        <div class="status-text">Connecting...</div>
+        <div class="status-subtext">Syncing with server...</div>
+      </div>
+
+      <div class="sync-info" id="syncInfo">
+        <div class="sync-card" id="latencyCard">
+          <div class="label">Latency</div>
+          <div class="value">--ms</div>
+        </div>
+        <div class="sync-card" id="statusCard">
+          <div class="label">Status</div>
+          <div class="value">--</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let roomCode = '';
+    let listenerName = '';
+    let audioContext;
+    let audioBuffer;
+    let sourceNode;
+    let gainNode;
+    let timeOffset = 0;
+    let latency = 0;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    roomCode = urlParams.get('room');
+    listenerName = urlParams.get('name') || 'Listener';
+
+    if (!roomCode) {
+      alert('No room code provided');
+      window.location.href = '/';
+    }
+
+    document.getElementById('roomCode').textContent = roomCode;
+    document.getElementById('listenerName').textContent = listenerName;
+
+    // ═══════════════════════════════════════════════════════════
+    // NTP TIME SYNCHRONIZATION
+    // ═══════════════════════════════════════════════════════════
+
+    function startNTPSync() {
+      syncTime(); // Initial sync
+      setInterval(syncTime, 2000); // Sync every 2 seconds
+    }
+
+    function syncTime() {
+      const clientSendTime = Date.now();
+      
+      socket.emit('ntp:sync', clientSendTime, (data) => {
+        const clientReceiveTime = Date.now();
+        const roundTripTime = clientReceiveTime - clientSendTime;
+        const networkLatency = roundTripTime / 2;
+        
+        // Calculate time offset
+        timeOffset = data.serverTime - (clientReceiveTime - networkLatency);
+        latency = Math.round(networkLatency);
+        
+        updateSyncDisplay();
+      });
+    }
+
+    function getServerTime() {
+      return Date.now() + timeOffset;
+    }
+
+    function updateSyncDisplay() {
+      const syncInfo = document.getElementById('syncInfo');
+      const latencyCard = document.getElementById('latencyCard');
+      const statusCard = document.getElementById('statusCard');
+      
+      if (latency > 0) {
+        syncInfo.classList.add('active');
+        
+        latencyCard.querySelector('.value').textContent = latency + 'ms';
+        
+        if (latency < 50) {
+          latencyCard.classList.add('good');
+          latencyCard.classList.remove('warning', 'bad');
+          statusCard.querySelector('.value').textContent = 'Excellent';
+          statusCard.classList.add('good');
+        } else if (latency < 150) {
+          latencyCard.classList.add('warning');
+          latencyCard.classList.remove('good', 'bad');
+          statusCard.querySelector('.value').textContent = 'Good';
+          statusCard.classList.add('warning');
+        } else {
+          latencyCard.classList.add('bad');
+          latencyCard.classList.remove('good', 'warning');
+          statusCard.querySelector('.value').textContent = 'High';
+          statusCard.classList.add('bad');
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // SOCKET EVENTS
+    // ═══════════════════════════════════════════════════════════
+
+    socket.on('connect', () => {
+      console.log('✅ Connected');
+      startNTPSync();
+
+      socket.emit('join-as-listener', { roomCode, listenerName }, (response) => {
+        if (response.error) {
+          alert('Room not found');
+          window.location.href = '/';
+          return;
+        }
+
+        console.log('✅ Joined room');
+        updateStatus('ready', '✅ Connected', 'Waiting for audio...');
+
+        if (response.audioUrl) {
+          downloadAudio(response.audioUrl, response.currentState.metadata);
+        }
+      });
+    });
+
+    socket.on('file:ready', (data) => {
+      console.log('📥 File ready');
+      if (data.metadata) {
+        document.getElementById('trackTitle').textContent = data.metadata.title;
+        document.getElementById('trackArtist').textContent = data.metadata.artist;
+      }
+      downloadAudio(data.url);
+    });
+
+    socket.on('sync:play', (data) => {
+      console.log('▶️ Play command at', data.scheduledStartTime);
+      playAudioAt(data.scheduledStartTime, data.offset);
+    });
+
+    socket.on('sync:pause', () => {
+      console.log('⏸️ Pause command');
+      pauseAudio();
+    });
+
+    socket.on('sync:stop', () => {
+      console.log('⏹️ Stop command');
+      stopAudio();
+    });
+
+    socket.on('sync:seek', (data) => {
+      console.log('⏩ Seek to', data.position);
+      // Just update position, don't play
+    });
+
+    socket.on('room-closed', () => {
+      alert('Room has been closed');
+      window.location.href = '/';
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // AUDIO DOWNLOAD
+    // ═══════════════════════════════════════════════════════════
+
+    async function downloadAudio(url, metadata) {
+      try {
+        updateStatus('downloading', '📥 Downloading', 'Loading audio file...');
+        console.log('📥 Downloading:', url);
+
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        gainNode = audioContext.createGain();
+        gainNode.connect(audioContext.destination);
+
+        console.log('✅ Audio ready:', audioBuffer.duration, 'seconds');
+        updateStatus('ready', '✅ Ready', 'Waiting for host to play...');
+
+        if (metadata) {
+          document.getElementById('trackTitle').textContent = metadata.title;
+          document.getElementById('trackArtist').textContent = metadata.artist;
+        }
+
+        // Notify server
+        socket.emit('download-complete', { roomCode });
+        socket.emit('sync-ready', { roomCode });
+
+      } catch (err) {
+        console.error('❌ Download error:', err);
+        updateStatus('error', '❌ Error', 'Failed to load audio');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PLAYBACK (NTP SYNCHRONIZED)
+    // ═══════════════════════════════════════════════════════════
+
+    function playAudioAt(scheduledStartTime, offsetMs) {
+      if (!audioBuffer) {
+        console.warn('Audio not ready yet');
+        return;
+      }
+
+      // Stop any existing playback
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch (e) {}
+      }
+
+      // Create new source
+      sourceNode = audioContext.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.connect(gainNode);
+
+      // Calculate timing
+      const nowServer = getServerTime();
+      const delayUntilStart = scheduledStartTime - nowServer;
+      const offsetSeconds = offsetMs / 1000;
+
+      console.log('⏱️ Server time:', nowServer);
+      console.log('⏱️ Scheduled start:', scheduledStartTime);
+      console.log('⏱️ Delay:', delayUntilStart, 'ms');
+      console.log('⏱️ Offset:', offsetSeconds, 's');
+
+      if (delayUntilStart > 0) {
+        // Future start - schedule it
+        const contextStart = audioContext.currentTime + (delayUntilStart / 1000);
+        sourceNode.start(contextStart, offsetSeconds);
+        console.log('✅ Scheduled to start in', delayUntilStart, 'ms');
+      } else {
+        // Late start - catch up
+        const missedBy = Math.abs(delayUntilStart) / 1000;
+        const catchUpOffset = offsetSeconds + missedBy;
+        sourceNode.start(0, catchUpOffset);
+        console.log('⚠️ Late by', missedBy, 's - catching up');
+      }
+
+      document.getElementById('albumArt').classList.add('playing');
+      updateStatus('playing', '🔴 Playing', 'Synced with host');
+    }
+
+    function pauseAudio() {
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch (e) {}
+        sourceNode = null;
+      }
+      document.getElementById('albumArt').classList.remove('playing');
+      updateStatus('ready', '⏸️ Paused', 'Waiting for host...');
+    }
+
+    function stopAudio() {
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch (e) {}
+        sourceNode = null;
+      }
+      document.getElementById('albumArt').classList.remove('playing');
+      updateStatus('ready', '⏹️ Stopped', 'Ready to play');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════════
+
+    function updateStatus(type, title, subtitle) {
+      const status = document.getElementById('status');
+      status.className = 'status ' + type;
+      
+      const icon = title.split(' ')[0];
+      const text = title.substring(title.indexOf(' ') + 1);
+      
+      status.innerHTML = `
+        <div class="status-icon">${icon}</div>
+        <div class="status-text">${text}</div>
+        <div class="status-subtext">${subtitle}</div>
+      `;
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (audioContext) audioContext.close();
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Disconnected');
+      updateStatus('error', '❌ Disconnected', 'Connection lost');
+    });
+  </script>
+</body>
+</html>

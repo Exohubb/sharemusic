@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎛️ Host Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    /* Header */
+    .header {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { color: #667eea; font-size: 28px; }
+    .room-code {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 30px;
+      border-radius: 15px;
+      text-align: center;
+    }
+    .room-code .label { font-size: 12px; opacity: 0.9; }
+    .room-code .code { font-size: 32px; font-weight: bold; letter-spacing: 3px; }
+    
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 20px;
+    }
+    
+    /* Player Card */
+    .player-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    /* Upload Area */
+    .upload-area {
+      border: 3px dashed #667eea;
+      border-radius: 15px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 25px;
+    }
+    .upload-area:hover { background: #f9fafb; }
+    .upload-area .icon { font-size: 50px; margin-bottom: 15px; }
+    .upload-area h3 { color: #667eea; margin-bottom: 8px; }
+    .upload-area p { color: #6b7280; font-size: 14px; }
+    
+    /* Track Info */
+    .track-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      display: none;
+    }
+    .track-info.active { display: block; }
+    .track-info .title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+    .track-info .artist { font-size: 16px; opacity: 0.9; }
+    
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .btn {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn.play { background: #10b981; color: white; }
+    .btn.pause { background: #f59e0b; color: white; }
+    .btn.stop { background: #ef4444; color: white; }
+    .btn:hover:not(:disabled) { transform: scale(1.02); }
+    
+    /* Seek Bar */
+    .seek-bar-container { margin-bottom: 20px; }
+    .seek-bar {
+      width: 100%;
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+    }
+    .seek-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      width: 0%;
+      border-radius: 10px;
+    }
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+    
+    /* Status */
+    .status {
+      background: #f9fafb;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .status.error { background: #fef2f2; color: #ef4444; }
+    .status.success { background: #f0fdf4; color: #10b981; }
+    
+    /* Listeners Section */
+    .listeners-section {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+    }
+    .listeners-section h2 {
+      color: #667eea;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .listener-count {
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+    .listener-card {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+    }
+    .listener-name {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .listener-status {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .empty-listeners {
+      text-align: center;
+      padding: 40px 20px;
+      color: #9ca3af;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .header { flex-direction: column; gap: 15px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div>
+        <h1>🎛️ Host Dashboard</h1>
+        <p style="color: #6b7280; font-size: 14px;">Control your music stream</p>
+      </div>
+      <div class="room-code">
+        <div class="label">ROOM CODE</div>
+        <div class="code" id="roomCode">----</div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+      <!-- Player Section -->
+      <div class="player-card">
+        <!-- Upload Area -->
+        <div class="upload-area" onclick="document.getElementById('audioFile').click()">
+          <input type="file" id="audioFile" accept="audio/*" style="display: none;">
+          <div class="icon">📁</div>
+          <h3>Upload Audio File</h3>
+          <p>Click to browse (MP3, WAV, M4A, etc.)</p>
+        </div>
+
+        <!-- Track Info -->
+        <div class="track-info" id="trackInfo">
+          <div class="title" id="trackTitle">Unknown Track</div>
+          <div class="artist" id="trackArtist">Unknown Artist</div>
+        </div>
+
+        <!-- Status -->
+        <div class="status" id="status">Ready to upload audio file</div>
+
+        <!-- Controls -->
+        <div class="controls">
+          <button class="btn play" id="playBtn" onclick="play()" disabled>▶️ Play</button>
+          <button class="btn pause" id="pauseBtn" onclick="pause()" disabled>⏸️ Pause</button>
+          <button class="btn stop" id="stopBtn" onclick="stop()" disabled>⏹️ Stop</button>
+        </div>
+
+        <!-- Seek Bar -->
+        <div class="seek-bar-container">
+          <div class="seek-bar" id="seekBar" onclick="seekTo(event)">
+            <div class="seek-fill" id="seekFill"></div>
+          </div>
+          <div class="time-display">
+            <span id="currentTime">0:00</span>
+            <span id="totalTime">0:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Listeners Section -->
+      <div class="listeners-section">
+        <h2>👥 Listeners <span class="listener-count" id="listenerCount">0</span></h2>
+        <div id="listenersList">
+          <div class="empty-listeners">
+            <div style="font-size: 60px; margin-bottom: 15px;">🎧</div>
+            <p>No listeners yet</p>
+            <p style="font-size: 12px; margin-top: 5px;">Share your room code</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let roomCode = '';
+    let audioContext;
+    let audioBuffer;
+    let sourceNode;
+    let gainNode;
+    let isPlaying = false;
+    let localPosition = 0;
+    let progressInterval = null;
+
+    // Get room code from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    roomCode = urlParams.get('room');
+
+    if (!roomCode) {
+      alert('No room code provided');
+      window.location.href = '/';
+    }
+
+    document.getElementById('roomCode').textContent = roomCode;
+
+    // ═══════════════════════════════════════════════════════════
+    // SOCKET CONNECTION
+    // ═══════════════════════════════════════════════════════════
+
+    socket.on('connect', () => {
+      console.log('✅ Connected to server');
+      
+      socket.emit('join-as-host', { roomCode }, (response) => {
+        if (response.error) {
+          alert('Room not found. Redirecting...');
+          window.location.href = '/';
+          return;
+        }
+
+        console.log('✅ Joined as host');
+
+        if (response.roomState && response.roomState.audioUrl) {
+          downloadAudio(response.roomState.audioUrl, response.roomState.metadata);
+        }
+      });
+    });
+
+    socket.on('file:ready', (data) => {
+      console.log('📥 File ready:', data.url);
+      downloadAudio(data.url, data.metadata);
+    });
+
+    socket.on('listener-list', (listeners) => {
+      const listenersList = document.getElementById('listenersList');
+      const listenerCount = document.getElementById('listenerCount');
+      
+      listenerCount.textContent = listeners.length;
+      
+      if (listeners.length === 0) {
+        listenersList.innerHTML = `
+          <div class="empty-listeners">
+            <div style="font-size: 60px; margin-bottom: 15px;">🎧</div>
+            <p>No listeners yet</p>
+            <p style="font-size: 12px; margin-top: 5px;">Share your room code</p>
+          </div>
+        `;
+      } else {
+        listenersList.innerHTML = listeners.map(l => `
+          <div class="listener-card">
+            <div class="listener-name">👤 ${l.name}</div>
+            <div class="listener-status">
+              ${l.downloaded ? '✅ Downloaded' : '⏳ Downloading'} • 
+              ${l.synced ? '🎯 Synced' : '⏰ Syncing'}
+            </div>
+          </div>
+        `).join('');
+      }
+    });
+
+    socket.on('room-closed', () => {
+      alert('Room has been closed');
+      window.location.href = '/';
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // FILE UPLOAD
+    // ═══════════════════════════════════════════════════════════
+
+    document.getElementById('audioFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      updateStatus('Uploading...', 'info');
+
+      const formData = new FormData();
+      formData.append('audio', file);
+      formData.append('roomCode', roomCode);
+
+      try {
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          updateStatus('Upload successful!', 'success');
+        } else {
+          updateStatus('Upload failed: ' + result.error, 'error');
+        }
+
+      } catch (err) {
+        console.error('Upload error:', err);
+        updateStatus('Upload failed', 'error');
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // AUDIO DOWNLOAD & WEB AUDIO API
+    // ═══════════════════════════════════════════════════════════
+
+    async function downloadAudio(url, metadata) {
+      try {
+        updateStatus('Downloading audio...', 'info');
+        console.log('📥 Downloading:', url);
+
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        gainNode = audioContext.createGain();
+        gainNode.connect(audioContext.destination);
+
+        console.log('✅ Audio ready:', audioBuffer.duration, 'seconds');
+
+        if (metadata) {
+          document.getElementById('trackInfo').classList.add('active');
+          document.getElementById('trackTitle').textContent = metadata.title;
+          document.getElementById('trackArtist').textContent = metadata.artist;
+        }
+
+        const durationMs = audioBuffer.duration * 1000;
+        document.getElementById('totalTime').textContent = formatTime(durationMs);
+
+        document.getElementById('playBtn').disabled = false;
+        updateStatus('Ready to play!', 'success');
+
+      } catch (err) {
+        console.error('❌ Download error:', err);
+        updateStatus('Failed to load audio: ' + err.message, 'error');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PLAYBACK CONTROLS
+    // ═══════════════════════════════════════════════════════════
+
+    function play() {
+      if (!audioBuffer) return;
+
+      socket.emit('play', { roomCode, position: localPosition });
+
+      // Play locally
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch (e) {}
+      }
+
+      sourceNode = audioContext.createBufferSource();
+      sourceNode.buffer = audioBuffer;
+      sourceNode.connect(gainNode);
+      sourceNode.start(0, localPosition / 1000);
+
+      isPlaying = true;
+      document.getElementById('playBtn').disabled = true;
+      document.getElementById('pauseBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = false;
+
+      startProgressUpdater();
+      updateStatus('Playing...', 'success');
+    }
+
+    function pause() {
+      socket.emit('pause', { roomCode });
+
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch (e) {}
+        sourceNode = null;
+      }
+
+      isPlaying = false;
+      document.getElementById('playBtn').disabled = false;
+      document.getElementById('pauseBtn').disabled = true;
+
+      stopProgressUpdater();
+      updateStatus('Paused', 'info');
+    }
+
+    function stop() {
+      socket.emit('stop', { roomCode });
+
+      if (sourceNode) {
+        try { sourceNode.stop(); } catch (e) {}
+        sourceNode = null;
+      }
+
+      isPlaying = false;
+      localPosition = 0;
+      document.getElementById('playBtn').disabled = false;
+      document.getElementById('pauseBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = true;
+      document.getElementById('seekFill').style.width = '0%';
+      document.getElementById('currentTime').textContent = '0:00';
+
+      stopProgressUpdater();
+      updateStatus('Stopped', 'info');
+    }
+
+    function seekTo(event) {
+      if (!audioBuffer) return;
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const percent = (event.clientX - rect.left) / rect.width;
+      const position = percent * audioBuffer.duration * 1000;
+
+      localPosition = position;
+      socket.emit('seek', { roomCode, position });
+
+      if (isPlaying) {
+        play();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // PROGRESS UPDATER
+    // ═══════════════════════════════════════════════════════════
+
+    function startProgressUpdater() {
+      const startTime = Date.now();
+      const startPosition = localPosition;
+
+      progressInterval = setInterval(() => {
+        if (isPlaying && audioBuffer) {
+          const elapsed = Date.now() - startTime;
+          localPosition = startPosition + elapsed;
+
+          const duration = audioBuffer.duration * 1000;
+          if (localPosition >= duration) {
+            localPosition = duration;
+            stop();
+            return;
+          }
+
+          const percent = (localPosition / duration) * 100;
+          document.getElementById('seekFill').style.width = Math.min(percent, 100) + '%';
+          document.getElementById('currentTime').textContent = formatTime(localPosition);
+        }
+      }, 100);
+    }
+
+    function stopProgressUpdater() {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════════
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateStatus(message, type) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      status.className = 'status ' + type;
+    }
+
+    window.addEventListener('beforeunload', () => {
+      stopProgressUpdater();
+      if (audioContext) audioContext.close();
+    });
+  </script>
+</body>
+</html>
