@@ -242,351 +242,449 @@
   <audio id="audioPlayer" preload="auto"></audio>
   
   <script src="/socket.io/socket.io.js"></script>
-  <script>
-    // ═══════════════════════════════════════════════════════════
-    // ✅ PROFESSIONAL SYNC ENGINE WITH DELAY CONTROL
-    // ═══════════════════════════════════════════════════════════
+ <script>
+  // ═══════════════════════════════════════════════════════════
+  // ✅ SMOOTH SYNC ENGINE (NO CRACKLING)
+  // ═══════════════════════════════════════════════════════════
+  
+  const socket = io();
+  const audio = document.getElementById('audioPlayer');
+  
+  let roomCode = new URLSearchParams(window.location.search).get('room');
+  let listenerName = new URLSearchParams(window.location.search).get('name') || 'Listener';
+  
+  // Sync variables
+  let clockOffset = 0;
+  let manualDelay = 0;
+  let syncSamples = [];
+  let scheduledPlayData = null;
+  let syncCheckInterval = null;
+  let lastCorrectionTime = 0;
+  
+  // ✅ Audio buffering
+  let audioBlob = null;
+  let isAudioFullyLoaded = false;
+  
+  // UI Elements
+  const statusEl = document.getElementById('status');
+  const trackTitleEl = document.getElementById('trackTitle');
+  const trackArtistEl = document.getElementById('trackArtist');
+  const progressFillEl = document.getElementById('progressFill');
+  const currentTimeEl = document.getElementById('currentTime');
+  const durationEl = document.getElementById('duration');
+  const delaySlider = document.getElementById('delaySlider');
+  const delayValueEl = document.getElementById('delayValue');
+  const clockOffsetEl = document.getElementById('clockOffset');
+  const pingValueEl = document.getElementById('pingValue');
+  const syncAccuracyEl = document.getElementById('syncAccuracy');
+  const positionErrorEl = document.getElementById('positionError');
+  
+  // ═══════════════════════════════════════════════════════════
+  // ✅ ENHANCED NTP SYNC
+  // ═══════════════════════════════════════════════════════════
+  
+  async function performNTPSync() {
+    console.log('🕐 Performing NTP sync...');
+    syncSamples = [];
     
-    const socket = io();
-    const audio = document.getElementById('audioPlayer');
-    
-    let roomCode = new URLSearchParams(window.location.search).get('room');
-    let listenerName = new URLSearchParams(window.location.search).get('name') || 'Listener';
-    
-    // Sync variables
-    let clockOffset = 0;
-    let manualDelay = 0;
-    let syncSamples = [];
-    let scheduledPlayData = null;
-    let syncCheckInterval = null;
-    
-    // UI Elements
-    const statusEl = document.getElementById('status');
-    const trackTitleEl = document.getElementById('trackTitle');
-    const trackArtistEl = document.getElementById('trackArtist');
-    const progressFillEl = document.getElementById('progressFill');
-    const currentTimeEl = document.getElementById('currentTime');
-    const durationEl = document.getElementById('duration');
-    const delaySlider = document.getElementById('delaySlider');
-    const delayValueEl = document.getElementById('delayValue');
-    const clockOffsetEl = document.getElementById('clockOffset');
-    const pingValueEl = document.getElementById('pingValue');
-    const syncAccuracyEl = document.getElementById('syncAccuracy');
-    const positionErrorEl = document.getElementById('positionError');
-    
-    // ═══════════════════════════════════════════════════════════
-    // ✅ ENHANCED NTP SYNC (Multiple samples)
-    // ═══════════════════════════════════════════════════════════
-    
-    async function performNTPSync() {
-      console.log('🕐 Performing NTP sync...');
-      syncSamples = [];
+    for (let i = 0; i < 10; i++) {
+      const clientSendTime = performance.now();
       
-      for (let i = 0; i < 10; i++) {
-        const clientSendTime = performance.now();
-        
-        await new Promise(resolve => {
-          socket.emit('ntp:sync', clientSendTime, (response) => {
-            const clientReceiveTime = performance.now();
-            
-            const roundTripTime = clientReceiveTime - clientSendTime;
-            const offset = ((response.serverReceiveTime - clientSendTime) + 
-                           (response.serverSendTime - clientReceiveTime)) / 2;
-            
-            syncSamples.push({ offset, rtt: roundTripTime });
-            resolve();
-          });
-        });
-        
-        await new Promise(resolve => setTimeout(resolve, 50));
-      }
-      
-      // Remove outliers and average
-      syncSamples.sort((a, b) => a.rtt - b.rtt);
-      const goodSamples = syncSamples.slice(0, 5); // Take 5 best samples
-      
-      clockOffset = goodSamples.reduce((sum, s) => sum + s.offset, 0) / goodSamples.length;
-      const avgPing = goodSamples.reduce((sum, s) => sum + s.rtt, 0) / goodSamples.length;
-      
-      const variance = goodSamples.reduce((sum, s) => 
-        sum + Math.pow(s.offset - clockOffset, 2), 0) / goodSamples.length;
-      const stdDev = Math.sqrt(variance);
-      
-      const accuracy = stdDev < 5 ? 'excellent' : stdDev < 15 ? 'good' : stdDev < 30 ? 'fair' : 'poor';
-      
-      console.log(`✅ Clock sync complete:`);
-      console.log(`   Offset: ${clockOffset.toFixed(2)} ms`);
-      console.log(`   Ping: ${avgPing.toFixed(2)} ms`);
-      console.log(`   Accuracy: ${accuracy} (σ=${stdDev.toFixed(2)})`);
-      
-      clockOffsetEl.textContent = `${clockOffset.toFixed(0)} ms`;
-      pingValueEl.textContent = `${avgPing.toFixed(0)} ms`;
-      syncAccuracyEl.textContent = accuracy;
-      
-      socket.emit('update-sync-stats', {
-        roomCode,
-        clockOffset: clockOffset,
-        syncAccuracy: accuracy
-      });
-      
-      return { offset: clockOffset, ping: avgPing, accuracy };
-    }
-    
-    // ═══════════════════════════════════════════════════════════
-    // ✅ GET SERVER TIME (with offset)
-    // ═══════════════════════════════════════════════════════════
-    
-    function getServerTime() {
-      return performance.now() + clockOffset + manualDelay;
-    }
-    
-    // ═══════════════════════════════════════════════════════════
-    // ✅ MANUAL DELAY CONTROL
-    // ═══════════════════════════════════════════════════════════
-    
-    delaySlider.addEventListener('input', (e) => {
-      manualDelay = parseInt(e.target.value);
-      delayValueEl.textContent = manualDelay;
-      
-      console.log(`⏱️ Manual delay adjusted: ${manualDelay} ms`);
-      
-      // Re-sync if playing
-      if (scheduledPlayData && !audio.paused) {
-        syncToScheduledPlay(scheduledPlayData);
-      }
-    });
-    
-    // ═══════════════════════════════════════════════════════════
-    // ✅ PRECISE PLAYBACK SYNCHRONIZATION
-    // ═══════════════════════════════════════════════════════════
-    
-    function syncToScheduledPlay(data) {
-      const currentServerTime = getServerTime();
-      const targetStartTime = data.scheduledStartTime;
-      const targetPosition = data.offset / 1000; // Convert to seconds
-      
-      const timeUntilStart = targetStartTime - currentServerTime;
-      
-      console.log(`🎯 Sync to play:`);
-      console.log(`   Target start: ${targetStartTime}`);
-      console.log(`   Current server time: ${currentServerTime}`);
-      console.log(`   Time until start: ${timeUntilStart.toFixed(2)} ms`);
-      console.log(`   Target position: ${targetPosition.toFixed(3)} s`);
-      
-      if (timeUntilStart > 100) {
-        // Schedule future playback
-        console.log(`⏰ Scheduling playback in ${timeUntilStart.toFixed(0)} ms`);
-        
-        audio.currentTime = targetPosition;
-        audio.pause();
-        
-        setTimeout(() => {
-          audio.play().then(() => {
-            console.log(`▶️ Started playback at ${audio.currentTime.toFixed(3)}s`);
-          }).catch(err => {
-            console.error('❌ Play failed:', err);
-          });
-        }, timeUntilStart);
-        
-      } else if (timeUntilStart > -500) {
-        // Start immediately
-        audio.currentTime = targetPosition;
-        audio.play().then(() => {
-          console.log(`▶️ Started playback immediately`);
-        }).catch(err => console.error('❌ Play failed:', err));
-        
-      } else {
-        // We're late, calculate catch-up position
-        const elapsedSinceStart = -timeUntilStart;
-        const catchUpPosition = targetPosition + (elapsedSinceStart / 1000);
-        
-        console.log(`⚡ Late start, jumping to ${catchUpPosition.toFixed(3)}s (${elapsedSinceStart.toFixed(0)}ms behind)`);
-        
-        audio.currentTime = catchUpPosition;
-        audio.play().catch(err => console.error('❌ Play failed:', err));
-      }
-      
-      scheduledPlayData = data;
-    }
-    
-    // ═══════════════════════════════════════════════════════════
-    // ✅ CONTINUOUS SYNC CORRECTION
-    // ═══════════════════════════════════════════════════════════
-    
-    function startSyncMonitoring() {
-      if (syncCheckInterval) clearInterval(syncCheckInterval);
-      
-      syncCheckInterval = setInterval(() => {
-        if (!scheduledPlayData || audio.paused) return;
-        
-        const currentServerTime = getServerTime();
-        const elapsedSinceScheduled = currentServerTime - scheduledPlayData.scheduledStartTime;
-        const expectedPosition = (scheduledPlayData.offset + elapsedSinceScheduled) / 1000;
-        const actualPosition = audio.currentTime;
-        const positionError = (actualPosition - expectedPosition) * 1000;
-        
-        positionErrorEl.textContent = `${positionError.toFixed(0)} ms`;
-        
-        // Auto-correct if drift is significant
-        if (Math.abs(positionError) > 100) {
-          console.warn(`⚠️ Drift detected: ${positionError.toFixed(0)} ms, correcting...`);
-          audio.currentTime = expectedPosition;
-        }
-        
-      }, 2000); // Check every 2 seconds
-    }
-    
-    // ═══════════════════════════════════════════════════════════
-    // SOCKET EVENTS
-    // ═══════════════════════════════════════════════════════════
-    
-    socket.on('connect', async () => {
-      console.log('✅ Connected to server');
-      statusEl.textContent = 'Syncing clocks...';
-      statusEl.className = 'status syncing';
-      
-      // Perform NTP sync
-      await performNTPSync();
-      
-      // Join room
-      socket.emit('join-as-listener', { roomCode, listenerName }, async (response) => {
-        if (response.error) {
-          statusEl.textContent = response.error;
-          statusEl.className = 'status error';
-          return;
-        }
-        
-        console.log('✅ Joined room:', roomCode);
-        statusEl.textContent = `Connected to ${response.hostName}'s room`;
-        statusEl.className = 'status connected';
-        
-        // Load audio if available
-        if (response.audioUrl) {
-          await loadAudio(response.audioUrl);
+      await new Promise(resolve => {
+        socket.emit('ntp:sync', clientSendTime, (response) => {
+          const clientReceiveTime = performance.now();
           
-          // Sync to current state
-          if (response.currentState.playing) {
-            syncToScheduledPlay({
-              scheduledStartTime: response.currentState.scheduledStartTime,
-              offset: response.currentState.startOffset,
-              serverTime: response.currentState.serverTime
-            });
-          }
-        }
-      });
-    });
-    
-    socket.on('file:ready', async ({ url, metadata }) => {
-      console.log('📥 New file ready:', metadata.title);
-      trackTitleEl.textContent = metadata.title;
-      trackArtistEl.textContent = metadata.artist;
-      await loadAudio(url);
-    });
-    
-    socket.on('sync:play', (data) => {
-      console.log('▶️ Play command received');
-      syncToScheduledPlay(data);
-      startSyncMonitoring();
-    });
-    
-    socket.on('sync:pause', (data) => {
-      console.log('⏸️ Pause command received');
-      audio.pause();
-      audio.currentTime = data.position / 1000;
-      scheduledPlayData = null;
-      if (syncCheckInterval) clearInterval(syncCheckInterval);
-    });
-    
-    socket.on('sync:stop', (data) => {
-      console.log('⏹️ Stop command received');
-      audio.pause();
-      audio.currentTime = 0;
-      scheduledPlayData = null;
-      if (syncCheckInterval) clearInterval(syncCheckInterval);
-    });
-    
-    socket.on('sync:seek', (data) => {
-      console.log('⏩ Seek command received');
-      audio.currentTime = data.position / 1000;
-    });
-    
-    socket.on('sync:update', (data) => {
-      // Continuous sync updates from server
-      if (!audio.paused) {
-        const expectedPosition = data.currentPosition / 1000;
-        const drift = (audio.currentTime - expectedPosition) * 1000;
-        
-        if (Math.abs(drift) > 200) {
-          console.log(`🔄 Auto-correcting drift: ${drift.toFixed(0)} ms`);
-          audio.currentTime = expectedPosition;
-        }
-      }
-    });
-    
-    socket.on('volume-update', ({ volume }) => {
-      audio.volume = volume;
-    });
-    
-    socket.on('mute-update', ({ muted }) => {
-      audio.muted = muted;
-    });
-    
-    // ═══════════════════════════════════════════════════════════
-    // AUDIO LOADING
-    // ═══════════════════════════════════════════════════════════
-    
-    async function loadAudio(url) {
-      console.log('📥 Loading audio from:', url);
-      statusEl.textContent = 'Loading audio...';
-      statusEl.className = 'status syncing';
-      
-      try {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        
-        audio.src = objectUrl;
-        
-        await new Promise((resolve, reject) => {
-          audio.addEventListener('canplaythrough', resolve, { once: true });
-          audio.addEventListener('error', reject, { once: true });
+          const roundTripTime = clientReceiveTime - clientSendTime;
+          const offset = ((response.serverReceiveTime - clientSendTime) + 
+                         (response.serverSendTime - clientReceiveTime)) / 2;
+          
+          syncSamples.push({ offset, rtt: roundTripTime });
+          resolve();
         });
-        
-        durationEl.textContent = formatTime(audio.duration);
-        
-        console.log('✅ Audio loaded, duration:', audio.duration);
-        statusEl.textContent = 'Ready to play';
-        statusEl.className = 'status connected';
-        
-        socket.emit('download-complete', { roomCode });
-        socket.emit('sync-ready', { roomCode });
-        
-      } catch (err) {
-        console.error('❌ Failed to load audio:', err);
-        statusEl.textContent = 'Failed to load audio';
-        statusEl.className = 'status error';
-      }
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
     
-    // ═══════════════════════════════════════════════════════════
-    // UI UPDATES
-    // ═══════════════════════════════════════════════════════════
+    syncSamples.sort((a, b) => a.rtt - b.rtt);
+    const goodSamples = syncSamples.slice(0, 5);
     
-    audio.addEventListener('timeupdate', () => {
-      if (!isNaN(audio.duration)) {
-        const progress = (audio.currentTime / audio.duration) * 100;
-        progressFillEl.style.width = `${progress}%`;
-        currentTimeEl.textContent = formatTime(audio.currentTime);
-      }
+    clockOffset = goodSamples.reduce((sum, s) => sum + s.offset, 0) / goodSamples.length;
+    const avgPing = goodSamples.reduce((sum, s) => sum + s.rtt, 0) / goodSamples.length;
+    
+    const variance = goodSamples.reduce((sum, s) => 
+      sum + Math.pow(s.offset - clockOffset, 2), 0) / goodSamples.length;
+    const stdDev = Math.sqrt(variance);
+    
+    const accuracy = stdDev < 5 ? 'excellent' : stdDev < 15 ? 'good' : stdDev < 30 ? 'fair' : 'poor';
+    
+    console.log(`✅ Clock sync complete:`);
+    console.log(`   Offset: ${clockOffset.toFixed(2)} ms`);
+    console.log(`   Ping: ${avgPing.toFixed(2)} ms`);
+    console.log(`   Accuracy: ${accuracy} (σ=${stdDev.toFixed(2)})`);
+    
+    clockOffsetEl.textContent = `${clockOffset.toFixed(0)} ms`;
+    pingValueEl.textContent = `${avgPing.toFixed(0)} ms`;
+    syncAccuracyEl.textContent = accuracy;
+    
+    socket.emit('update-sync-stats', {
+      roomCode,
+      clockOffset: clockOffset,
+      syncAccuracy: accuracy
     });
     
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return { offset: clockOffset, ping: avgPing, accuracy };
+  }
+  
+  // ═══════════════════════════════════════════════════════════
+  // ✅ GET SERVER TIME
+  // ═══════════════════════════════════════════════════════════
+  
+  function getServerTime() {
+    return performance.now() + clockOffset + manualDelay;
+  }
+  
+  // ═══════════════════════════════════════════════════════════
+  // ✅ MANUAL DELAY CONTROL
+  // ═══════════════════════════════════════════════════════════
+  
+  delaySlider.addEventListener('input', (e) => {
+    manualDelay = parseInt(e.target.value);
+    delayValueEl.textContent = manualDelay;
+    
+    console.log(`⏱️ Manual delay adjusted: ${manualDelay} ms`);
+    
+    // Re-sync if playing
+    if (scheduledPlayData && !audio.paused) {
+      syncToScheduledPlay(scheduledPlayData, true);
+    }
+  });
+  
+  // ═══════════════════════════════════════════════════════════
+  // ✅ SMOOTH SYNC (USES PLAYBACK RATE, NOT TIME JUMPS)
+  // ═══════════════════════════════════════════════════════════
+  
+  function syncToScheduledPlay(data, isManualAdjustment = false) {
+    if (!isAudioFullyLoaded) {
+      console.warn('⚠️ Audio not fully loaded yet, queuing playback...');
+      scheduledPlayData = data;
+      return;
     }
     
-    console.log('🎵 Music Share Listener initialized');
-  </script>
+    const currentServerTime = getServerTime();
+    const targetStartTime = data.scheduledStartTime;
+    const targetPosition = data.offset / 1000;
+    
+    const timeUntilStart = targetStartTime - currentServerTime;
+    
+    console.log(`🎯 Sync to play:`);
+    console.log(`   Target start: ${targetStartTime}`);
+    console.log(`   Current server time: ${currentServerTime}`);
+    console.log(`   Time until start: ${timeUntilStart.toFixed(2)} ms`);
+    console.log(`   Target position: ${targetPosition.toFixed(3)} s`);
+    
+    if (timeUntilStart > 100) {
+      // Schedule future playback
+      console.log(`⏰ Scheduling playback in ${timeUntilStart.toFixed(0)} ms`);
+      
+      audio.currentTime = targetPosition;
+      audio.playbackRate = 1.0;
+      audio.pause();
+      
+      setTimeout(() => {
+        audio.play().then(() => {
+          console.log(`▶️ Started playback at ${audio.currentTime.toFixed(3)}s`);
+        }).catch(err => {
+          console.error('❌ Play failed:', err);
+          // Retry after user interaction
+          document.body.addEventListener('click', () => audio.play(), { once: true });
+        });
+      }, timeUntilStart);
+      
+    } else if (timeUntilStart > -200) {
+      // Start immediately
+      audio.currentTime = targetPosition;
+      audio.playbackRate = 1.0;
+      audio.play().then(() => {
+        console.log(`▶️ Started playback immediately`);
+      }).catch(err => {
+        console.error('❌ Play failed:', err);
+        document.body.addEventListener('click', () => audio.play(), { once: true });
+      });
+      
+    } else {
+      // We're late, calculate catch-up position
+      const elapsedSinceStart = -timeUntilStart;
+      const catchUpPosition = targetPosition + (elapsedSinceStart / 1000);
+      
+      console.log(`⚡ Late start, jumping to ${catchUpPosition.toFixed(3)}s`);
+      
+      audio.currentTime = catchUpPosition;
+      audio.playbackRate = 1.0;
+      audio.play().catch(err => {
+        console.error('❌ Play failed:', err);
+        document.body.addEventListener('click', () => audio.play(), { once: true });
+      });
+    }
+    
+    scheduledPlayData = data;
+  }
+  
+  // ═══════════════════════════════════════════════════════════
+  // ✅ SMOOTH SYNC MONITORING (NO CRACKLING)
+  // ═══════════════════════════════════════════════════════════
+  
+  function startSyncMonitoring() {
+    if (syncCheckInterval) clearInterval(syncCheckInterval);
+    
+    syncCheckInterval = setInterval(() => {
+      if (!scheduledPlayData || audio.paused || !isAudioFullyLoaded) return;
+      
+      const now = Date.now();
+      const currentServerTime = getServerTime();
+      const elapsedSinceScheduled = currentServerTime - scheduledPlayData.scheduledStartTime;
+      const expectedPosition = (scheduledPlayData.offset + elapsedSinceScheduled) / 1000;
+      const actualPosition = audio.currentTime;
+      const positionError = (actualPosition - expectedPosition) * 1000;
+      
+      positionErrorEl.textContent = `${positionError.toFixed(0)} ms`;
+      
+      // ✅ SMOOTH CORRECTION STRATEGY
+      const absError = Math.abs(positionError);
+      
+      if (absError > 500) {
+        // Large error: Jump (but limit frequency)
+        if (now - lastCorrectionTime > 3000) {
+          console.warn(`⚠️ Large drift: ${positionError.toFixed(0)} ms, jumping...`);
+          audio.currentTime = expectedPosition;
+          lastCorrectionTime = now;
+        }
+      } else if (absError > 100 && absError <= 500) {
+        // Medium error: Use playback rate adjustment
+        if (positionError > 0) {
+          // We're ahead, slow down slightly
+          audio.playbackRate = 0.98;
+          console.log(`🐌 Slowing down: ${positionError.toFixed(0)} ms ahead`);
+        } else {
+          // We're behind, speed up slightly
+          audio.playbackRate = 1.02;
+          console.log(`🏃 Speeding up: ${positionError.toFixed(0)} ms behind`);
+        }
+        
+        // Reset to normal after 2 seconds
+        setTimeout(() => {
+          if (audio.playbackRate !== 1.0) {
+            audio.playbackRate = 1.0;
+            console.log(`✅ Playback rate normalized`);
+          }
+        }, 2000);
+      } else {
+        // Small error: Do nothing, keep playback rate normal
+        if (audio.playbackRate !== 1.0) {
+          audio.playbackRate = 1.0;
+        }
+      }
+      
+    }, 3000); // Check every 3 seconds (less aggressive)
+  }
+  
+  // ═══════════════════════════════════════════════════════════
+  // SOCKET EVENTS
+  // ═══════════════════════════════════════════════════════════
+  
+  socket.on('connect', async () => {
+    console.log('✅ Connected to server');
+    statusEl.textContent = 'Syncing clocks...';
+    statusEl.className = 'status syncing';
+    
+    await performNTPSync();
+    
+    socket.emit('join-as-listener', { roomCode, listenerName }, async (response) => {
+      if (response.error) {
+        statusEl.textContent = response.error;
+        statusEl.className = 'status error';
+        return;
+      }
+      
+      console.log('✅ Joined room:', roomCode);
+      statusEl.textContent = `Connected to ${response.hostName}'s room`;
+      statusEl.className = 'status connected';
+      
+      if (response.audioUrl) {
+        await loadAudio(response.audioUrl);
+        
+        if (response.currentState.playing && isAudioFullyLoaded) {
+          syncToScheduledPlay({
+            scheduledStartTime: response.currentState.scheduledStartTime,
+            offset: response.currentState.startOffset,
+            serverTime: response.currentState.serverTime
+          });
+        }
+      }
+    });
+  });
+  
+  socket.on('file:ready', async ({ url, metadata }) => {
+    console.log('📥 New file ready:', metadata.title);
+    trackTitleEl.textContent = metadata.title;
+    trackArtistEl.textContent = metadata.artist;
+    await loadAudio(url);
+  });
+  
+  socket.on('sync:play', (data) => {
+    console.log('▶️ Play command received');
+    syncToScheduledPlay(data);
+    startSyncMonitoring();
+  });
+  
+  socket.on('sync:pause', (data) => {
+    console.log('⏸️ Pause command received');
+    audio.pause();
+    audio.currentTime = data.position / 1000;
+    audio.playbackRate = 1.0;
+    scheduledPlayData = null;
+    if (syncCheckInterval) clearInterval(syncCheckInterval);
+  });
+  
+  socket.on('sync:stop', (data) => {
+    console.log('⏹️ Stop command received');
+    audio.pause();
+    audio.currentTime = 0;
+    audio.playbackRate = 1.0;
+    scheduledPlayData = null;
+    if (syncCheckInterval) clearInterval(syncCheckInterval);
+  });
+  
+  socket.on('sync:seek', (data) => {
+    console.log('⏩ Seek command received');
+    audio.currentTime = data.position / 1000;
+    audio.playbackRate = 1.0;
+  });
+  
+  socket.on('volume-update', ({ volume }) => {
+    audio.volume = volume;
+  });
+  
+  socket.on('mute-update', ({ muted }) => {
+    audio.muted = muted;
+  });
+  
+  // ═══════════════════════════════════════════════════════════
+  // ✅ AUDIO LOADING (FULL PRE-LOAD, NO STREAMING)
+  // ═══════════════════════════════════════════════════════════
+  
+  async function loadAudio(url) {
+    console.log('📥 Downloading audio completely...');
+    statusEl.textContent = 'Downloading audio (0%)...';
+    statusEl.className = 'status syncing';
+    
+    isAudioFullyLoaded = false;
+    
+    try {
+      // ✅ Download with progress tracking
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const contentLength = response.headers.get('content-length');
+      const total = parseInt(contentLength, 10);
+      let loaded = 0;
+      
+      const reader = response.body.getReader();
+      const chunks = [];
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+        
+        chunks.push(value);
+        loaded += value.length;
+        
+        if (total) {
+          const progress = Math.round((loaded / total) * 100);
+          statusEl.textContent = `Downloading audio (${progress}%)...`;
+          console.log(`📥 Downloaded: ${progress}%`);
+        }
+      }
+      
+      // Create blob from chunks
+      const blob = new Blob(chunks, { type: 'audio/mpeg' });
+      audioBlob = blob;
+      const objectUrl = URL.createObjectURL(blob);
+      
+      console.log(`✅ Audio fully downloaded: ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+      
+      // Load into audio element
+      audio.src = objectUrl;
+      
+      // Wait for full load
+      await new Promise((resolve, reject) => {
+        audio.addEventListener('canplaythrough', resolve, { once: true });
+        audio.addEventListener('error', reject, { once: true });
+        audio.load();
+      });
+      
+      durationEl.textContent = formatTime(audio.duration);
+      
+      isAudioFullyLoaded = true;
+      
+      console.log('✅ Audio ready, duration:', audio.duration);
+      statusEl.textContent = 'Ready to play';
+      statusEl.className = 'status connected';
+      
+      socket.emit('download-complete', { roomCode });
+      socket.emit('sync-ready', { roomCode });
+      
+      // If we have pending playback, start it now
+      if (scheduledPlayData) {
+        syncToScheduledPlay(scheduledPlayData);
+        startSyncMonitoring();
+      }
+      
+    } catch (err) {
+      console.error('❌ Failed to load audio:', err);
+      statusEl.textContent = 'Failed to load audio';
+      statusEl.className = 'status error';
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════
+  // UI UPDATES
+  // ═══════════════════════════════════════════════════════════
+  
+  audio.addEventListener('timeupdate', () => {
+    if (!isNaN(audio.duration)) {
+      const progress = (audio.currentTime / audio.duration) * 100;
+      progressFillEl.style.width = `${progress}%`;
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+    }
+  });
+  
+  // ✅ Prevent audio interruptions
+  audio.addEventListener('stalled', () => {
+    console.warn('⚠️ Audio stalled');
+  });
+  
+  audio.addEventListener('waiting', () => {
+    console.warn('⚠️ Audio buffering...');
+  });
+  
+  audio.addEventListener('error', (e) => {
+    console.error('❌ Audio error:', e);
+  });
+  
+  function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }
+  
+  console.log('🎵 Music Share Listener initialized (Smooth Sync Mode)');
+</script>
+
 </body>
 </html>
+
