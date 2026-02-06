@@ -3,459 +3,590 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎧 Listener</title>
+  <title>Music Share - Listener</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
       display: flex;
-      align-items: center;
       justify-content: center;
-      padding: 20px;
-    }
-    .container { max-width: 500px; width: 100%; }
-    .player-card {
-      background: white;
-      border-radius: 30px;
-      padding: 40px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .room-badge {
-      background: #667eea;
+      align-items: center;
       color: white;
-      display: inline-block;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-    .header h1 { font-size: 28px; color: #1f2937; margin-bottom: 10px; }
-    .header .subtitle { font-size: 14px; color: #6b7280; }
-    
-    /* Album Art */
-    .album-art {
-      width: 200px;
-      height: 200px;
-      margin: 0 auto 30px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 80px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-      transition: all 0.3s;
-    }
-    .album-art.playing {
-      animation: pulse 2s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { 
-        box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
-        transform: scale(1);
-      }
-      50% { 
-        box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5); 
-        transform: scale(1.02);
-      }
     }
     
-    /* Track Info */
-    .track-info {
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    
+    h1 {
       text-align: center;
       margin-bottom: 30px;
-    }
-    .track-title { 
-      font-size: 20px; 
-      font-weight: bold; 
-      color: #1f2937; 
-      margin-bottom: 8px; 
-    }
-    .track-artist { 
-      font-size: 16px; 
-      color: #6b7280; 
+      font-size: 2em;
     }
     
-    /* Status */
-    .status {
-      background: #f9fafb;
+    .player {
+      background: rgba(0, 0, 0, 0.3);
       border-radius: 15px;
       padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .track-info {
       text-align: center;
-      transition: all 0.3s;
       margin-bottom: 20px;
     }
-    .status.downloading { 
-      background: #dbeafe; 
-      color: #1e40af; 
-    }
-    .status.ready { 
-      background: #d1fae5; 
-      color: #065f46; 
-    }
-    .status.playing {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-    }
-    .status.error { 
-      background: #fee2e2; 
-      color: #991b1b; 
-    }
-    .status-icon { 
-      font-size: 40px; 
-      margin-bottom: 10px; 
-    }
-    .status-text { 
-      font-size: 16px; 
-      font-weight: 600;
+    
+    .track-title {
+      font-size: 1.3em;
+      font-weight: bold;
       margin-bottom: 5px;
     }
-    .status-subtext {
-      font-size: 13px;
+    
+    .track-artist {
+      font-size: 0.9em;
       opacity: 0.8;
     }
     
-    /* Sync Info */
-    .sync-info {
-      background: #f9fafb;
-      border-radius: 12px;
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      margin: 20px 0;
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: #4ade80;
+      border-radius: 4px;
+      transition: width 0.1s linear;
+    }
+    
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+      opacity: 0.8;
+    }
+    
+    /* ✅ DELAY CONTROL SECTION */
+    .delay-control {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
       padding: 15px;
+      margin: 20px 0;
+    }
+    
+    .delay-control h3 {
+      font-size: 1em;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .delay-slider {
+      width: 100%;
+      margin: 10px 0;
+    }
+    
+    .delay-value {
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #4ade80;
+    }
+    
+    .sync-stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      font-size: 13px;
-      display: none;
+      margin-top: 15px;
     }
-    .sync-info.active { display: grid; }
-    .sync-card {
-      text-align: center;
+    
+    .stat {
+      background: rgba(0, 0, 0, 0.2);
       padding: 10px;
-      background: white;
       border-radius: 8px;
+      text-align: center;
     }
-    .sync-card .label {
-      color: #6b7280;
-      font-size: 11px;
+    
+    .stat-label {
+      font-size: 0.8em;
+      opacity: 0.8;
       margin-bottom: 5px;
     }
-    .sync-card .value {
-      color: #1f2937;
-      font-size: 18px;
+    
+    .stat-value {
+      font-size: 1.1em;
       font-weight: bold;
     }
-    .sync-card.good .value { color: #10b981; }
-    .sync-card.warning .value { color: #f59e0b; }
-    .sync-card.bad .value { color: #ef4444; }
+    
+    .status {
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    
+    .status.connected {
+      background: rgba(74, 222, 128, 0.3);
+      color: #4ade80;
+    }
+    
+    .status.syncing {
+      background: rgba(251, 191, 36, 0.3);
+      color: #fbbf24;
+    }
+    
+    .status.error {
+      background: rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+    
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+      border-radius: 3px;
+      -webkit-appearance: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #4ade80;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: #4ade80;
+      cursor: pointer;
+      border-radius: 50%;
+      border: none;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="player-card">
-      <div class="header">
-        <div class="room-badge">Room: <strong id="roomCode">----</strong></div>
-        <h1>🎧 Listener</h1>
-        <p class="subtitle" id="listenerName">Connecting...</p>
-      </div>
-
-      <div class="album-art" id="albumArt">🎵</div>
-
+    <h1>🎵 Music Share</h1>
+    
+    <div id="status" class="status syncing">Connecting...</div>
+    
+    <div class="player">
       <div class="track-info">
-        <div class="track-title" id="trackTitle">No Track Playing</div>
-        <div class="track-artist" id="trackArtist">Waiting for host...</div>
+        <div class="track-title" id="trackTitle">No track loaded</div>
+        <div class="track-artist" id="trackArtist">—</div>
       </div>
-
-      <div class="status" id="status">
-        <div class="status-icon">🔊</div>
-        <div class="status-text">Connecting...</div>
-        <div class="status-subtext">Syncing with server...</div>
+      
+      <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
       </div>
-
-      <div class="sync-info" id="syncInfo">
-        <div class="sync-card" id="latencyCard">
-          <div class="label">Latency</div>
-          <div class="value">--ms</div>
+      
+      <div class="time-display">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+    
+    <!-- ✅ DELAY CONTROL -->
+    <div class="delay-control">
+      <h3>⏱️ Manual Delay Adjustment</h3>
+      <input type="range" class="delay-slider" id="delaySlider" 
+             min="-2000" max="2000" value="0" step="10">
+      <div class="delay-value">
+        <span id="delayValue">0</span> ms
+      </div>
+      
+      <div class="sync-stats">
+        <div class="stat">
+          <div class="stat-label">Clock Offset</div>
+          <div class="stat-value" id="clockOffset">—</div>
         </div>
-        <div class="sync-card" id="statusCard">
-          <div class="label">Status</div>
-          <div class="value">--</div>
+        <div class="stat">
+          <div class="stat-label">Network Ping</div>
+          <div class="stat-value" id="pingValue">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Sync Accuracy</div>
+          <div class="stat-value" id="syncAccuracy">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Position Error</div>
+          <div class="stat-value" id="positionError">—</div>
         </div>
       </div>
     </div>
   </div>
-
+  
+  <audio id="audioPlayer" preload="auto"></audio>
+  
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    // ═══════════════════════════════════════════════════════════
+    // ✅ PROFESSIONAL SYNC ENGINE WITH DELAY CONTROL
+    // ═══════════════════════════════════════════════════════════
+    
     const socket = io();
-    let roomCode = '';
-    let listenerName = '';
-    let audioContext;
-    let audioBuffer;
-    let sourceNode;
-    let gainNode;
-    let timeOffset = 0;
-    let latency = 0;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    roomCode = urlParams.get('room');
-    listenerName = urlParams.get('name') || 'Listener';
-
-    if (!roomCode) {
-      alert('No room code provided');
-      window.location.href = '/';
-    }
-
-    document.getElementById('roomCode').textContent = roomCode;
-    document.getElementById('listenerName').textContent = listenerName;
-
+    const audio = document.getElementById('audioPlayer');
+    
+    let roomCode = new URLSearchParams(window.location.search).get('room');
+    let listenerName = new URLSearchParams(window.location.search).get('name') || 'Listener';
+    
+    // Sync variables
+    let clockOffset = 0;
+    let manualDelay = 0;
+    let syncSamples = [];
+    let scheduledPlayData = null;
+    let syncCheckInterval = null;
+    
+    // UI Elements
+    const statusEl = document.getElementById('status');
+    const trackTitleEl = document.getElementById('trackTitle');
+    const trackArtistEl = document.getElementById('trackArtist');
+    const progressFillEl = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationEl = document.getElementById('duration');
+    const delaySlider = document.getElementById('delaySlider');
+    const delayValueEl = document.getElementById('delayValue');
+    const clockOffsetEl = document.getElementById('clockOffset');
+    const pingValueEl = document.getElementById('pingValue');
+    const syncAccuracyEl = document.getElementById('syncAccuracy');
+    const positionErrorEl = document.getElementById('positionError');
+    
     // ═══════════════════════════════════════════════════════════
-    // NTP TIME SYNCHRONIZATION
+    // ✅ ENHANCED NTP SYNC (Multiple samples)
     // ═══════════════════════════════════════════════════════════
-
-    function startNTPSync() {
-      syncTime(); // Initial sync
-      setInterval(syncTime, 2000); // Sync every 2 seconds
-    }
-
-    function syncTime() {
-      const clientSendTime = Date.now();
+    
+    async function performNTPSync() {
+      console.log('🕐 Performing NTP sync...');
+      syncSamples = [];
       
-      socket.emit('ntp:sync', clientSendTime, (data) => {
-        const clientReceiveTime = Date.now();
-        const roundTripTime = clientReceiveTime - clientSendTime;
-        const networkLatency = roundTripTime / 2;
+      for (let i = 0; i < 10; i++) {
+        const clientSendTime = performance.now();
         
-        // Calculate time offset
-        timeOffset = data.serverTime - (clientReceiveTime - networkLatency);
-        latency = Math.round(networkLatency);
+        await new Promise(resolve => {
+          socket.emit('ntp:sync', clientSendTime, (response) => {
+            const clientReceiveTime = performance.now();
+            
+            const roundTripTime = clientReceiveTime - clientSendTime;
+            const offset = ((response.serverReceiveTime - clientSendTime) + 
+                           (response.serverSendTime - clientReceiveTime)) / 2;
+            
+            syncSamples.push({ offset, rtt: roundTripTime });
+            resolve();
+          });
+        });
         
-        updateSyncDisplay();
-      });
-    }
-
-    function getServerTime() {
-      return Date.now() + timeOffset;
-    }
-
-    function updateSyncDisplay() {
-      const syncInfo = document.getElementById('syncInfo');
-      const latencyCard = document.getElementById('latencyCard');
-      const statusCard = document.getElementById('statusCard');
-      
-      if (latency > 0) {
-        syncInfo.classList.add('active');
-        
-        latencyCard.querySelector('.value').textContent = latency + 'ms';
-        
-        if (latency < 50) {
-          latencyCard.classList.add('good');
-          latencyCard.classList.remove('warning', 'bad');
-          statusCard.querySelector('.value').textContent = 'Excellent';
-          statusCard.classList.add('good');
-        } else if (latency < 150) {
-          latencyCard.classList.add('warning');
-          latencyCard.classList.remove('good', 'bad');
-          statusCard.querySelector('.value').textContent = 'Good';
-          statusCard.classList.add('warning');
-        } else {
-          latencyCard.classList.add('bad');
-          latencyCard.classList.remove('good', 'warning');
-          statusCard.querySelector('.value').textContent = 'High';
-          statusCard.classList.add('bad');
-        }
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
+      
+      // Remove outliers and average
+      syncSamples.sort((a, b) => a.rtt - b.rtt);
+      const goodSamples = syncSamples.slice(0, 5); // Take 5 best samples
+      
+      clockOffset = goodSamples.reduce((sum, s) => sum + s.offset, 0) / goodSamples.length;
+      const avgPing = goodSamples.reduce((sum, s) => sum + s.rtt, 0) / goodSamples.length;
+      
+      const variance = goodSamples.reduce((sum, s) => 
+        sum + Math.pow(s.offset - clockOffset, 2), 0) / goodSamples.length;
+      const stdDev = Math.sqrt(variance);
+      
+      const accuracy = stdDev < 5 ? 'excellent' : stdDev < 15 ? 'good' : stdDev < 30 ? 'fair' : 'poor';
+      
+      console.log(`✅ Clock sync complete:`);
+      console.log(`   Offset: ${clockOffset.toFixed(2)} ms`);
+      console.log(`   Ping: ${avgPing.toFixed(2)} ms`);
+      console.log(`   Accuracy: ${accuracy} (σ=${stdDev.toFixed(2)})`);
+      
+      clockOffsetEl.textContent = `${clockOffset.toFixed(0)} ms`;
+      pingValueEl.textContent = `${avgPing.toFixed(0)} ms`;
+      syncAccuracyEl.textContent = accuracy;
+      
+      socket.emit('update-sync-stats', {
+        roomCode,
+        clockOffset: clockOffset,
+        syncAccuracy: accuracy
+      });
+      
+      return { offset: clockOffset, ping: avgPing, accuracy };
     }
-
+    
+    // ═══════════════════════════════════════════════════════════
+    // ✅ GET SERVER TIME (with offset)
+    // ═══════════════════════════════════════════════════════════
+    
+    function getServerTime() {
+      return performance.now() + clockOffset + manualDelay;
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // ✅ MANUAL DELAY CONTROL
+    // ═══════════════════════════════════════════════════════════
+    
+    delaySlider.addEventListener('input', (e) => {
+      manualDelay = parseInt(e.target.value);
+      delayValueEl.textContent = manualDelay;
+      
+      console.log(`⏱️ Manual delay adjusted: ${manualDelay} ms`);
+      
+      // Re-sync if playing
+      if (scheduledPlayData && !audio.paused) {
+        syncToScheduledPlay(scheduledPlayData);
+      }
+    });
+    
+    // ═══════════════════════════════════════════════════════════
+    // ✅ PRECISE PLAYBACK SYNCHRONIZATION
+    // ═══════════════════════════════════════════════════════════
+    
+    function syncToScheduledPlay(data) {
+      const currentServerTime = getServerTime();
+      const targetStartTime = data.scheduledStartTime;
+      const targetPosition = data.offset / 1000; // Convert to seconds
+      
+      const timeUntilStart = targetStartTime - currentServerTime;
+      
+      console.log(`🎯 Sync to play:`);
+      console.log(`   Target start: ${targetStartTime}`);
+      console.log(`   Current server time: ${currentServerTime}`);
+      console.log(`   Time until start: ${timeUntilStart.toFixed(2)} ms`);
+      console.log(`   Target position: ${targetPosition.toFixed(3)} s`);
+      
+      if (timeUntilStart > 100) {
+        // Schedule future playback
+        console.log(`⏰ Scheduling playback in ${timeUntilStart.toFixed(0)} ms`);
+        
+        audio.currentTime = targetPosition;
+        audio.pause();
+        
+        setTimeout(() => {
+          audio.play().then(() => {
+            console.log(`▶️ Started playback at ${audio.currentTime.toFixed(3)}s`);
+          }).catch(err => {
+            console.error('❌ Play failed:', err);
+          });
+        }, timeUntilStart);
+        
+      } else if (timeUntilStart > -500) {
+        // Start immediately
+        audio.currentTime = targetPosition;
+        audio.play().then(() => {
+          console.log(`▶️ Started playback immediately`);
+        }).catch(err => console.error('❌ Play failed:', err));
+        
+      } else {
+        // We're late, calculate catch-up position
+        const elapsedSinceStart = -timeUntilStart;
+        const catchUpPosition = targetPosition + (elapsedSinceStart / 1000);
+        
+        console.log(`⚡ Late start, jumping to ${catchUpPosition.toFixed(3)}s (${elapsedSinceStart.toFixed(0)}ms behind)`);
+        
+        audio.currentTime = catchUpPosition;
+        audio.play().catch(err => console.error('❌ Play failed:', err));
+      }
+      
+      scheduledPlayData = data;
+    }
+    
+    // ═══════════════════════════════════════════════════════════
+    // ✅ CONTINUOUS SYNC CORRECTION
+    // ═══════════════════════════════════════════════════════════
+    
+    function startSyncMonitoring() {
+      if (syncCheckInterval) clearInterval(syncCheckInterval);
+      
+      syncCheckInterval = setInterval(() => {
+        if (!scheduledPlayData || audio.paused) return;
+        
+        const currentServerTime = getServerTime();
+        const elapsedSinceScheduled = currentServerTime - scheduledPlayData.scheduledStartTime;
+        const expectedPosition = (scheduledPlayData.offset + elapsedSinceScheduled) / 1000;
+        const actualPosition = audio.currentTime;
+        const positionError = (actualPosition - expectedPosition) * 1000;
+        
+        positionErrorEl.textContent = `${positionError.toFixed(0)} ms`;
+        
+        // Auto-correct if drift is significant
+        if (Math.abs(positionError) > 100) {
+          console.warn(`⚠️ Drift detected: ${positionError.toFixed(0)} ms, correcting...`);
+          audio.currentTime = expectedPosition;
+        }
+        
+      }, 2000); // Check every 2 seconds
+    }
+    
     // ═══════════════════════════════════════════════════════════
     // SOCKET EVENTS
     // ═══════════════════════════════════════════════════════════
-
-    socket.on('connect', () => {
-      console.log('✅ Connected');
-      startNTPSync();
-
-      socket.emit('join-as-listener', { roomCode, listenerName }, (response) => {
+    
+    socket.on('connect', async () => {
+      console.log('✅ Connected to server');
+      statusEl.textContent = 'Syncing clocks...';
+      statusEl.className = 'status syncing';
+      
+      // Perform NTP sync
+      await performNTPSync();
+      
+      // Join room
+      socket.emit('join-as-listener', { roomCode, listenerName }, async (response) => {
         if (response.error) {
-          alert('Room not found');
-          window.location.href = '/';
+          statusEl.textContent = response.error;
+          statusEl.className = 'status error';
           return;
         }
-
-        console.log('✅ Joined room');
-        updateStatus('ready', '✅ Connected', 'Waiting for audio...');
-
+        
+        console.log('✅ Joined room:', roomCode);
+        statusEl.textContent = `Connected to ${response.hostName}'s room`;
+        statusEl.className = 'status connected';
+        
+        // Load audio if available
         if (response.audioUrl) {
-          downloadAudio(response.audioUrl, response.currentState.metadata);
+          await loadAudio(response.audioUrl);
+          
+          // Sync to current state
+          if (response.currentState.playing) {
+            syncToScheduledPlay({
+              scheduledStartTime: response.currentState.scheduledStartTime,
+              offset: response.currentState.startOffset,
+              serverTime: response.currentState.serverTime
+            });
+          }
         }
       });
     });
-
-    socket.on('file:ready', (data) => {
-      console.log('📥 File ready');
-      if (data.metadata) {
-        document.getElementById('trackTitle').textContent = data.metadata.title;
-        document.getElementById('trackArtist').textContent = data.metadata.artist;
-      }
-      downloadAudio(data.url);
+    
+    socket.on('file:ready', async ({ url, metadata }) => {
+      console.log('📥 New file ready:', metadata.title);
+      trackTitleEl.textContent = metadata.title;
+      trackArtistEl.textContent = metadata.artist;
+      await loadAudio(url);
     });
-
+    
     socket.on('sync:play', (data) => {
-      console.log('▶️ Play command at', data.scheduledStartTime);
-      playAudioAt(data.scheduledStartTime, data.offset);
+      console.log('▶️ Play command received');
+      syncToScheduledPlay(data);
+      startSyncMonitoring();
     });
-
-    socket.on('sync:pause', () => {
-      console.log('⏸️ Pause command');
-      pauseAudio();
+    
+    socket.on('sync:pause', (data) => {
+      console.log('⏸️ Pause command received');
+      audio.pause();
+      audio.currentTime = data.position / 1000;
+      scheduledPlayData = null;
+      if (syncCheckInterval) clearInterval(syncCheckInterval);
     });
-
-    socket.on('sync:stop', () => {
-      console.log('⏹️ Stop command');
-      stopAudio();
+    
+    socket.on('sync:stop', (data) => {
+      console.log('⏹️ Stop command received');
+      audio.pause();
+      audio.currentTime = 0;
+      scheduledPlayData = null;
+      if (syncCheckInterval) clearInterval(syncCheckInterval);
     });
-
+    
     socket.on('sync:seek', (data) => {
-      console.log('⏩ Seek to', data.position);
-      // Just update position, don't play
+      console.log('⏩ Seek command received');
+      audio.currentTime = data.position / 1000;
     });
-
-    socket.on('room-closed', () => {
-      alert('Room has been closed');
-      window.location.href = '/';
-    });
-
-    // ═══════════════════════════════════════════════════════════
-    // AUDIO DOWNLOAD
-    // ═══════════════════════════════════════════════════════════
-
-    async function downloadAudio(url, metadata) {
-      try {
-        updateStatus('downloading', '📥 Downloading', 'Loading audio file...');
-        console.log('📥 Downloading:', url);
-
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-        gainNode = audioContext.createGain();
-        gainNode.connect(audioContext.destination);
-
-        console.log('✅ Audio ready:', audioBuffer.duration, 'seconds');
-        updateStatus('ready', '✅ Ready', 'Waiting for host to play...');
-
-        if (metadata) {
-          document.getElementById('trackTitle').textContent = metadata.title;
-          document.getElementById('trackArtist').textContent = metadata.artist;
+    
+    socket.on('sync:update', (data) => {
+      // Continuous sync updates from server
+      if (!audio.paused) {
+        const expectedPosition = data.currentPosition / 1000;
+        const drift = (audio.currentTime - expectedPosition) * 1000;
+        
+        if (Math.abs(drift) > 200) {
+          console.log(`🔄 Auto-correcting drift: ${drift.toFixed(0)} ms`);
+          audio.currentTime = expectedPosition;
         }
-
-        // Notify server
+      }
+    });
+    
+    socket.on('volume-update', ({ volume }) => {
+      audio.volume = volume;
+    });
+    
+    socket.on('mute-update', ({ muted }) => {
+      audio.muted = muted;
+    });
+    
+    // ═══════════════════════════════════════════════════════════
+    // AUDIO LOADING
+    // ═══════════════════════════════════════════════════════════
+    
+    async function loadAudio(url) {
+      console.log('📥 Loading audio from:', url);
+      statusEl.textContent = 'Loading audio...';
+      statusEl.className = 'status syncing';
+      
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        
+        audio.src = objectUrl;
+        
+        await new Promise((resolve, reject) => {
+          audio.addEventListener('canplaythrough', resolve, { once: true });
+          audio.addEventListener('error', reject, { once: true });
+        });
+        
+        durationEl.textContent = formatTime(audio.duration);
+        
+        console.log('✅ Audio loaded, duration:', audio.duration);
+        statusEl.textContent = 'Ready to play';
+        statusEl.className = 'status connected';
+        
         socket.emit('download-complete', { roomCode });
         socket.emit('sync-ready', { roomCode });
-
+        
       } catch (err) {
-        console.error('❌ Download error:', err);
-        updateStatus('error', '❌ Error', 'Failed to load audio');
+        console.error('❌ Failed to load audio:', err);
+        statusEl.textContent = 'Failed to load audio';
+        statusEl.className = 'status error';
       }
     }
-
+    
     // ═══════════════════════════════════════════════════════════
-    // PLAYBACK (NTP SYNCHRONIZED)
+    // UI UPDATES
     // ═══════════════════════════════════════════════════════════
-
-    function playAudioAt(scheduledStartTime, offsetMs) {
-      if (!audioBuffer) {
-        console.warn('Audio not ready yet');
-        return;
+    
+    audio.addEventListener('timeupdate', () => {
+      if (!isNaN(audio.duration)) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        progressFillEl.style.width = `${progress}%`;
+        currentTimeEl.textContent = formatTime(audio.currentTime);
       }
-
-      // Stop any existing playback
-      if (sourceNode) {
-        try { sourceNode.stop(); } catch (e) {}
-      }
-
-      // Create new source
-      sourceNode = audioContext.createBufferSource();
-      sourceNode.buffer = audioBuffer;
-      sourceNode.connect(gainNode);
-
-      // Calculate timing
-      const nowServer = getServerTime();
-      const delayUntilStart = scheduledStartTime - nowServer;
-      const offsetSeconds = offsetMs / 1000;
-
-      console.log('⏱️ Server time:', nowServer);
-      console.log('⏱️ Scheduled start:', scheduledStartTime);
-      console.log('⏱️ Delay:', delayUntilStart, 'ms');
-      console.log('⏱️ Offset:', offsetSeconds, 's');
-
-      if (delayUntilStart > 0) {
-        // Future start - schedule it
-        const contextStart = audioContext.currentTime + (delayUntilStart / 1000);
-        sourceNode.start(contextStart, offsetSeconds);
-        console.log('✅ Scheduled to start in', delayUntilStart, 'ms');
-      } else {
-        // Late start - catch up
-        const missedBy = Math.abs(delayUntilStart) / 1000;
-        const catchUpOffset = offsetSeconds + missedBy;
-        sourceNode.start(0, catchUpOffset);
-        console.log('⚠️ Late by', missedBy, 's - catching up');
-      }
-
-      document.getElementById('albumArt').classList.add('playing');
-      updateStatus('playing', '🔴 Playing', 'Synced with host');
-    }
-
-    function pauseAudio() {
-      if (sourceNode) {
-        try { sourceNode.stop(); } catch (e) {}
-        sourceNode = null;
-      }
-      document.getElementById('albumArt').classList.remove('playing');
-      updateStatus('ready', '⏸️ Paused', 'Waiting for host...');
-    }
-
-    function stopAudio() {
-      if (sourceNode) {
-        try { sourceNode.stop(); } catch (e) {}
-        sourceNode = null;
-      }
-      document.getElementById('albumArt').classList.remove('playing');
-      updateStatus('ready', '⏹️ Stopped', 'Ready to play');
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // HELPERS
-    // ═══════════════════════════════════════════════════════════
-
-    function updateStatus(type, title, subtitle) {
-      const status = document.getElementById('status');
-      status.className = 'status ' + type;
-      
-      const icon = title.split(' ')[0];
-      const text = title.substring(title.indexOf(' ') + 1);
-      
-      status.innerHTML = `
-        <div class="status-icon">${icon}</div>
-        <div class="status-text">${text}</div>
-        <div class="status-subtext">${subtitle}</div>
-      `;
-    }
-
-    window.addEventListener('beforeunload', () => {
-      if (audioContext) audioContext.close();
     });
-
-    socket.on('disconnect', () => {
-      console.log('❌ Disconnected');
-      updateStatus('error', '❌ Disconnected', 'Connection lost');
-    });
+    
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    console.log('🎵 Music Share Listener initialized');
   </script>
 </body>
 </html>
