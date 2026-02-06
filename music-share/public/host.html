@@ -1,566 +1,693 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Host Control Panel - Music Sync</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>Host Panel – Music Sync</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
       min-height: 100vh;
-      color: white;
-      padding: 20px;
+      color: #f9fafb;
+      padding: 16px;
+      overflow-x: hidden;
     }
-    
+
     .container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
     }
-    
+
     /* Header */
     .header {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 20px 30px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 20px 24px;
       margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 15px;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    
-    .room-info h1 {
-      font-size: 1.8em;
-      margin-bottom: 5px;
-    }
-    
-    .room-code {
-      font-size: 0.9em;
-      opacity: 0.8;
-    }
-    
-    .room-code-display {
-      background: rgba(74, 222, 128, 0.3);
-      padding: 15px 25px;
-      border-radius: 12px;
-      text-align: center;
-      border: 2px solid rgba(74, 222, 128, 0.5);
-    }
-    
-    .room-code-display .label {
-      font-size: 0.85em;
-      opacity: 0.8;
-      margin-bottom: 5px;
-    }
-    
-    .room-code-display .code {
-      font-size: 2.5em;
-      font-weight: bold;
-      letter-spacing: 8px;
-      color: #4ade80;
-    }
-    
-    /* Main Grid */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .panel {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 25px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    }
-    
-    .panel h2 {
-      margin-bottom: 20px;
-      font-size: 1.5em;
+
+    .header-left h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 4px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    
-    /* Player Panel */
-    .track-info {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
+
+    .header-left .subtitle {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .room-code-display {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.3));
+      border: 2px solid rgba(74, 222, 128, 0.6);
+      border-radius: 14px;
+      padding: 12px 24px;
       text-align: center;
     }
-    
+
+    .room-code-display .label {
+      font-size: 0.75rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .room-code-display .code {
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      color: #4ade80;
+      text-shadow: 0 2px 10px rgba(74, 222, 128, 0.5);
+    }
+
+    /* Grid Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 1200px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* Panel */
+    .panel {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    /* Track Info */
+    .track-info {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+      text-align: center;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
     .track-title {
-      font-size: 1.3em;
-      font-weight: bold;
-      margin-bottom: 5px;
-      white-space: nowrap;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    
+
     .track-artist {
-      font-size: 0.9em;
+      font-size: 0.9rem;
       opacity: 0.7;
     }
-    
+
+    /* Progress Bar */
     .progress-bar {
       width: 100%;
       height: 10px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 5px;
-      margin: 20px 0 10px 0;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+      margin: 16px 0 10px;
       position: relative;
       cursor: pointer;
+      overflow: hidden;
     }
-    
+
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4ade80, #22c55e);
-      border-radius: 5px;
+      background: linear-gradient(90deg, #22c55e, #10b981);
+      border-radius: 999px;
       transition: width 0.1s linear;
     }
-    
+
     .time-display {
       display: flex;
       justify-content: space-between;
-      font-size: 0.9em;
+      font-size: 0.85rem;
       opacity: 0.8;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    
+
+    /* Controls */
     .controls {
       display: flex;
       gap: 10px;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
-    
+
     .control-btn {
-      width: 60px;
-      height: 60px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
       border: none;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      font-size: 1.5em;
+      background: rgba(148, 163, 184, 0.25);
+      color: #f9fafb;
+      font-size: 1.4rem;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    
+
     .control-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.1);
+      background: rgba(148, 163, 184, 0.4);
+      transform: scale(1.05);
     }
-    
+
+    .control-btn:active {
+      transform: scale(0.98);
+    }
+
     .control-btn.play {
-      width: 80px;
-      height: 80px;
-      background: linear-gradient(135deg, #4ade80, #22c55e);
-      font-size: 2em;
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #22c55e, #10b981);
+      font-size: 2rem;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.5);
     }
-    
+
     .control-btn.play:hover {
-      box-shadow: 0 5px 20px rgba(74, 222, 128, 0.5);
+      box-shadow: 0 12px 32px rgba(34, 197, 94, 0.7);
     }
-    
-    /* Upload Section */
+
+    .control-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Upload Area */
     .upload-area {
-      border: 2px dashed rgba(255, 255, 255, 0.3);
-      border-radius: 12px;
-      padding: 30px;
+      border: 2px dashed rgba(148, 163, 184, 0.5);
+      border-radius: 14px;
+      padding: 28px 20px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s;
-      position: relative;
+      transition: all 0.2s ease;
+      margin-bottom: 16px;
     }
-    
-    .upload-area:hover {
+
+    .upload-area:hover:not(.uploading) {
       border-color: #4ade80;
       background: rgba(74, 222, 128, 0.1);
     }
-    
+
     .upload-area.dragover {
-      border-color: #4ade80;
-      background: rgba(74, 222, 128, 0.2);
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.2);
     }
-    
+
+    .upload-area.uploading {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+      cursor: wait;
+    }
+
     .upload-icon {
-      font-size: 3em;
-      margin-bottom: 15px;
-    }
-    
-    .upload-text {
-      font-size: 1.1em;
+      font-size: 3rem;
       margin-bottom: 10px;
     }
-    
+
+    .upload-text {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
     .upload-hint {
-      font-size: 0.9em;
+      font-size: 0.85rem;
       opacity: 0.7;
     }
-    
+
     input[type="file"] {
       display: none;
     }
-    
+
     .upload-progress {
-      margin-top: 20px;
+      margin-top: 14px;
       display: none;
     }
-    
-    .progress-bar-upload {
+
+    .upload-progress.active {
+      display: block;
+    }
+
+    .upload-progress-bar {
       width: 100%;
       height: 8px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
       overflow: hidden;
-      margin-top: 10px;
+      margin-bottom: 8px;
     }
-    
-    .progress-bar-upload-fill {
+
+    .upload-progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4ade80, #22c55e);
-      transition: width 0.3s;
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      border-radius: 999px;
+      transition: width 0.2s ease;
     }
-    
-    /* Listeners Panel */
-    .listeners-list {
-      max-height: 600px;
-      overflow-y: auto;
-      padding-right: 10px;
-    }
-    
-    .listener-card {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 15px;
-      border: 2px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.3s;
-    }
-    
-    .listener-card:hover {
-      border-color: #4ade80;
-    }
-    
-    .listener-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    
-    .listener-name {
-      font-size: 1.2em;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .listener-status {
-      display: flex;
-      gap: 10px;
-    }
-    
-    .status-badge {
-      padding: 5px 12px;
-      border-radius: 12px;
-      font-size: 0.8em;
-      font-weight: bold;
-    }
-    
-    .status-badge.synced {
-      background: rgba(74, 222, 128, 0.3);
-      color: #4ade80;
-    }
-    
-    .status-badge.loading {
-      background: rgba(251, 191, 36, 0.3);
-      color: #fbbf24;
-    }
-    
-    .listener-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    
-    .stat-box {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px;
-      border-radius: 8px;
+
+    .upload-status {
+      font-size: 0.85rem;
       text-align: center;
     }
-    
-    .stat-label {
-      font-size: 0.75em;
-      opacity: 0.7;
-      margin-bottom: 3px;
+
+    /* ✅ HOST DELAY CONTROL */
+    .host-delay {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.2));
+      border: 2px solid rgba(129, 140, 248, 0.5);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 16px;
     }
-    
-    .stat-value {
-      font-size: 1.1em;
-      font-weight: bold;
-    }
-    
-    /* ✅ DELAY CONTROL (MAIN FEATURE) */
-    .delay-control {
-      background: rgba(74, 222, 128, 0.1);
-      border: 2px solid rgba(74, 222, 128, 0.3);
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-    
-    .delay-control-header {
+
+    .delay-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
-    
+
     .delay-label {
-      font-size: 0.9em;
-      font-weight: bold;
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .delay-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #a5b4fc;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+      outline: none;
+      -webkit-appearance: none;
+      margin: 8px 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #a5b4fc;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(165, 180, 252, 0.5);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #a5b4fc;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px rgba(165, 180, 252, 0.5);
+    }
+
+    .delay-presets {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .preset-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      color: #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn:hover {
+      background: rgba(79, 70, 229, 0.3);
+      border-color: #a5b4fc;
+      transform: translateY(-1px);
+    }
+
+    /* Listeners Panel */
+    .listeners-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .listener-count {
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid rgba(74, 222, 128, 0.6);
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    .listeners-scroll {
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .listeners-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .listeners-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.6);
+      border-radius: 999px;
+    }
+
+    .listeners-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.8);
+    }
+
+    /* Listener Card */
+    .listener-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .listener-card:hover {
+      border-color: #4ade80;
+      box-shadow: 0 4px 16px rgba(74, 222, 128, 0.2);
+    }
+
+    .listener-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .listener-name {
+      font-size: 1.05rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    
-    .delay-value {
-      font-size: 1.2em;
-      font-weight: bold;
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .status-badge.synced {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.6);
+    }
+
+    .status-badge.loading {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(252, 211, 77, 0.6);
+    }
+
+    /* Stats Grid */
+    .listener-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-item {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-bottom: 3px;
+    }
+
+    .stat-value {
+      font-size: 0.95rem;
+      font-weight: 700;
       color: #4ade80;
     }
-    
-    .delay-slider {
-      width: 100%;
-      margin: 10px 0;
+
+    /* ✅ LISTENER DELAY CONTROL */
+    .listener-delay {
+      background: rgba(74, 222, 128, 0.1);
+      border: 1.5px solid rgba(34, 197, 94, 0.4);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
     }
-    
-    .delay-presets {
-      display: flex;
-      gap: 5px;
-      margin-top: 10px;
-    }
-    
-    .preset-btn {
-      flex: 1;
-      padding: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      border-radius: 6px;
-      font-size: 0.85em;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    
-    .preset-btn:hover {
-      background: rgba(74, 222, 128, 0.3);
-      border-color: #4ade80;
-    }
-    
+
     /* Volume Control */
     .volume-control {
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
-    
+
     .volume-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
     }
-    
-    .volume-label {
-      font-size: 0.9em;
-      opacity: 0.8;
-    }
-    
+
     .volume-value {
-      font-weight: bold;
+      font-weight: 700;
+      color: #4ade80;
     }
-    
-    input[type="range"] {
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.2);
-      outline: none;
-      border-radius: 3px;
-      -webkit-appearance: none;
-    }
-    
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      background: #4ade80;
-      cursor: pointer;
-      border-radius: 50%;
-    }
-    
-    input[type="range"]::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      background: #4ade80;
-      cursor: pointer;
-      border-radius: 50%;
-      border: none;
-    }
-    
+
+    /* Actions */
     .listener-actions {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
-    
+
     .action-btn {
       flex: 1;
       padding: 10px;
       border: none;
       border-radius: 8px;
-      font-size: 0.9em;
-      font-weight: bold;
+      font-size: 0.85rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s ease;
     }
-    
+
     .action-btn.mute {
-      background: rgba(239, 68, 68, 0.3);
-      color: #ef4444;
+      background: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.5);
     }
-    
+
     .action-btn.unmute {
-      background: rgba(74, 222, 128, 0.3);
+      background: rgba(34, 197, 94, 0.25);
       color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.5);
     }
-    
+
     .action-btn:hover {
       transform: translateY(-2px);
     }
-    
+
+    .action-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Empty State */
     .empty-listeners {
       text-align: center;
       padding: 40px 20px;
       opacity: 0.7;
     }
-    
-    .empty-listeners-icon {
-      font-size: 3em;
-      margin-bottom: 15px;
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
     }
-    
+
     /* Loading Overlay */
     .loading-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(10px);
+      inset: 0;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(16px);
       display: none;
-      justify-content: center;
       align-items: center;
-      z-index: 9999;
+      justify-content: center;
+      z-index: 1000;
     }
-    
+
     .loading-overlay.active {
       display: flex;
     }
-    
+
     .loading-content {
       text-align: center;
     }
-    
+
     .spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid rgba(255, 255, 255, 0.3);
+      width: 56px;
+      height: 56px;
+      border: 5px solid rgba(148, 163, 184, 0.3);
       border-top-color: #4ade80;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
+      margin: 0 auto 16px;
     }
-    
+
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-    
+
     .loading-text {
-      font-size: 1.2em;
-      margin-top: 15px;
+      font-size: 1.1rem;
+      font-weight: 600;
     }
-    
-    /* Scrollbar */
-    .listeners-list::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    .listeners-list::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-    }
-    
-    .listeners-list::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 4px;
-    }
-    
-    .listeners-list::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.5);
-    }
-    
+
     /* Responsive */
-    @media (max-width: 1200px) {
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-    
     @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
       .header {
+        padding: 16px;
         flex-direction: column;
         text-align: center;
       }
-      
+
+      .header-left h1 {
+        font-size: 1.3rem;
+      }
+
       .room-code-display .code {
-        font-size: 2em;
-        letter-spacing: 5px;
+        font-size: 2rem;
+        letter-spacing: 0.15em;
       }
-      
-      .listener-stats {
-        grid-template-columns: repeat(2, 1fr);
+
+      .grid {
+        grid-template-columns: 1fr;
       }
-      
+
+      .panel {
+        padding: 20px;
+      }
+
       .control-btn {
         width: 50px;
         height: 50px;
-        font-size: 1.2em;
+        font-size: 1.2rem;
       }
-      
+
       .control-btn.play {
-        width: 70px;
-        height: 70px;
+        width: 64px;
+        height: 64px;
+        font-size: 1.8rem;
+      }
+
+      .listener-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header-left h1 {
+        font-size: 1.1rem;
+      }
+
+      .room-code-display .code {
+        font-size: 1.8rem;
+      }
+
+      .delay-presets {
+        flex-direction: column;
+      }
+
+      .listener-actions {
+        flex-direction: column;
       }
     }
   </style>
@@ -576,66 +703,97 @@
 
   <div class="container">
     <!-- Header -->
-    <div class="header">
-      <div class="room-info">
-        <h1 id="roomName">🎙️ Music Sync Room</h1>
-        <div class="room-code">Host Control Panel</div>
+    <header class="header">
+      <div class="header-left">
+        <h1 id="roomNameDisplay">🎙️ Music Sync Room</h1>
+        <div class="subtitle">Host Control Panel</div>
       </div>
       <div class="room-code-display">
-        <div class="label">Room Code</div>
+        <div class="label">🔑 Room Code</div>
         <div class="code" id="roomCodeDisplay">----</div>
       </div>
-    </div>
+    </header>
 
     <!-- Main Grid -->
-    <div class="main-grid">
+    <div class="grid">
       <!-- Player Panel -->
       <div class="panel">
-        <h2>🎵 Music Player</h2>
-        
+        <div class="panel-title">🎵 Music Player</div>
+
         <div class="track-info">
           <div class="track-title" id="trackTitle">No track loaded</div>
           <div class="track-artist" id="trackArtist">Upload a file to begin</div>
         </div>
-        
+
         <div class="progress-bar" id="progressBar">
           <div class="progress-fill" id="progressFill"></div>
         </div>
-        
+
         <div class="time-display">
           <span id="currentTime">0:00</span>
           <span id="duration">0:00</span>
         </div>
-        
+
         <div class="controls">
-          <button class="control-btn" id="stopBtn" title="Stop">⏹️</button>
-          <button class="control-btn play" id="playBtn" title="Play">▶️</button>
-          <button class="control-btn" id="pauseBtn" title="Pause">⏸️</button>
+          <button class="control-btn" id="stopBtn" title="Stop" disabled>⏹️</button>
+          <button class="control-btn play" id="playBtn" title="Play" disabled>▶️</button>
+          <button class="control-btn" id="pauseBtn" title="Pause" disabled>⏸️</button>
         </div>
-        
+
+        <!-- ✅ HOST DELAY CONTROL (±2500ms) -->
+        <div class="host-delay">
+          <div class="delay-header">
+            <div class="delay-label">
+              ⏱️ Host Delay Control
+            </div>
+            <div class="delay-value" id="hostDelayValue">0 ms</div>
+          </div>
+          <input
+            type="range"
+            id="hostDelaySlider"
+            min="-2500"
+            max="2500"
+            value="0"
+            step="10"
+          />
+          <div class="delay-presets">
+            <button class="preset-btn" data-delay="-100">-100ms</button>
+            <button class="preset-btn" data-delay="0">Reset</button>
+            <button class="preset-btn" data-delay="100">+100ms</button>
+          </div>
+          <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 8px; text-align: center;">
+            Adjust if your playback feels ahead or behind
+          </div>
+        </div>
+
+        <!-- Upload Area -->
         <div class="upload-area" id="uploadArea">
           <div class="upload-icon">📁</div>
-          <div class="upload-text">Click or drag audio file here</div>
-          <div class="upload-hint">Supports MP3, M4A, WAV (Max 100MB)</div>
-          <input type="file" id="fileInput" accept="audio/*">
+          <div class="upload-text">Click or drag audio file</div>
+          <div class="upload-hint">MP3, M4A, WAV (Max 50MB)</div>
+          <input type="file" id="fileInput" accept="audio/*" />
         </div>
-        
+
         <div class="upload-progress" id="uploadProgress">
-          <div class="upload-text">Uploading...</div>
-          <div class="progress-bar-upload">
-            <div class="progress-bar-upload-fill" id="uploadProgressFill"></div>
+          <div class="upload-progress-bar">
+            <div class="upload-progress-fill" id="uploadProgressFill"></div>
           </div>
+          <div class="upload-status" id="uploadStatus">Uploading...</div>
         </div>
       </div>
 
       <!-- Listeners Panel -->
       <div class="panel">
-        <h2>👥 Listeners (<span id="listenerCount">0</span>)</h2>
-        <div class="listeners-list" id="listenersList">
+        <div class="listeners-header">
+          <div class="panel-title">👥 Listeners</div>
+          <div class="listener-count" id="listenerCount">0</div>
+        </div>
+
+        <div class="listeners-scroll" id="listenersContainer">
           <div class="empty-listeners">
-            <div class="empty-listeners-icon">👂</div>
-            <div>No listeners yet</div>
-            <div style="font-size: 0.9em; margin-top: 10px;">Share the room code with friends!</div>
+            <div class="empty-icon">👂</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">No listeners yet</div>
+            <div style="font-size: 0.85rem; opacity: 0.8;">Share the room code with friends!</div>
           </div>
         </div>
       </div>
@@ -646,341 +804,436 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
+    // ═══════════════════════════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════════════════════════
+
+    const socket = io({
+      transports: ['websocket', 'polling'],
+      upgrade: true,
+      reconnection: true
+    });
+
     const audio = document.getElementById('audioPlayer');
-    
     const roomCode = new URLSearchParams(window.location.search).get('room');
-    let isPlaying = false;
-    let hasAudioFile = false;
-    
+
     if (!roomCode) {
       alert('No room code provided');
       window.location.href = '/';
     }
-    
+
     document.getElementById('roomCodeDisplay').textContent = roomCode;
-    
+
+    let isPlaying = false;
+    let hasAudioFile = false;
+    let hostDelay = 0;
+    let isUploading = false;
+
     // ═══════════════════════════════════════════════════════════
     // LOADING OVERLAY
     // ═══════════════════════════════════════════════════════════
-    
+
     function showLoading(text = 'Processing...') {
       document.getElementById('loadingText').textContent = text;
       document.getElementById('loadingOverlay').classList.add('active');
     }
-    
+
     function hideLoading() {
       document.getElementById('loadingOverlay').classList.remove('active');
     }
-    
+
+    // ═══════════════════════════════════════════════════════════
+    // UTILITY FUNCTIONS
+    // ═══════════════════════════════════════════════════════════
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateControlButtons() {
+      const playBtn = document.getElementById('playBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const stopBtn = document.getElementById('stopBtn');
+
+      playBtn.disabled = !hasAudioFile;
+      pauseBtn.disabled = !hasAudioFile;
+      stopBtn.disabled = !hasAudioFile;
+    }
+
     // ═══════════════════════════════════════════════════════════
     // CONNECT AS HOST
     // ═══════════════════════════════════════════════════════════
-    
+
     socket.on('connect', () => {
       console.log('✅ Connected to server');
-      
+
       socket.emit('join-as-host', { roomCode }, (response) => {
-        if (response.error) {
-          alert(response.error);
+        if (!response || !response.success) {
+          alert(response?.error || 'Failed to join room');
           window.location.href = '/';
           return;
         }
-        
+
         console.log('✅ Joined as host');
-        
+
         if (response.roomState.roomName) {
-          document.getElementById('roomName').textContent = '🎙️ ' + response.roomState.roomName;
+          document.getElementById('roomNameDisplay').textContent = '🎙️ ' + response.roomState.roomName;
         }
-        
+
         if (response.roomState.hasFile) {
           hasAudioFile = true;
           audio.src = response.roomState.audioUrl;
           document.getElementById('trackTitle').textContent = response.roomState.metadata.title;
           document.getElementById('trackArtist').textContent = response.roomState.metadata.artist;
+          updateControlButtons();
         }
-        
+
+        if (response.roomState.hostDelay) {
+          hostDelay = response.roomState.hostDelay;
+          document.getElementById('hostDelaySlider').value = hostDelay;
+          document.getElementById('hostDelayValue').textContent = hostDelay + ' ms';
+        }
+
         isPlaying = response.roomState.playing;
-        updatePlayButton();
       });
     });
-    
+
     // ═══════════════════════════════════════════════════════════
     // PLAYBACK CONTROLS
     // ═══════════════════════════════════════════════════════════
-    
+
     document.getElementById('playBtn').addEventListener('click', () => {
-      if (!hasAudioFile) {
-        alert('Please upload an audio file first');
-        return;
-      }
-      
-      const position = audio.currentTime * 1000;
+      if (!hasAudioFile) return;
+
+      const position = Math.floor(audio.currentTime * 1000);
       socket.emit('play', { roomCode, position });
-      audio.play();
+
+      audio.play().catch(err => {
+        console.error('Play error:', err);
+      });
+
       isPlaying = true;
-      updatePlayButton();
     });
-    
+
     document.getElementById('pauseBtn').addEventListener('click', () => {
       socket.emit('pause', { roomCode });
       audio.pause();
       isPlaying = false;
-      updatePlayButton();
     });
-    
+
     document.getElementById('stopBtn').addEventListener('click', () => {
       socket.emit('stop', { roomCode });
       audio.pause();
       audio.currentTime = 0;
       isPlaying = false;
-      updatePlayButton();
     });
-    
-    function updatePlayButton() {
-      const playBtn = document.getElementById('playBtn');
-      playBtn.textContent = isPlaying ? '▶️' : '▶️';
-      playBtn.style.opacity = isPlaying ? '0.5' : '1';
-    }
-    
+
     // Progress bar seek
     document.getElementById('progressBar').addEventListener('click', (e) => {
-      if (!hasAudioFile) return;
-      
+      if (!hasAudioFile || !audio.duration) return;
+
       const rect = e.currentTarget.getBoundingClientRect();
       const percent = (e.clientX - rect.left) / rect.width;
-      const position = percent * audio.duration * 1000;
-      
+      const position = Math.floor(percent * audio.duration * 1000);
+
       socket.emit('seek', { roomCode, position });
       audio.currentTime = position / 1000;
     });
-    
+
     // Update progress bar
     audio.addEventListener('timeupdate', () => {
-      if (!isNaN(audio.duration)) {
+      if (!isNaN(audio.duration) && audio.duration > 0) {
         const progress = (audio.currentTime / audio.duration) * 100;
-        document.getElementById('progressFill').style.width = `${progress}%`;
+        document.getElementById('progressFill').style.width = progress + '%';
         document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
-        document.getElementById('duration').textContent = formatTime(audio.duration);
       }
     });
-    
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-    
+
+    audio.addEventListener('loadedmetadata', () => {
+      document.getElementById('duration').textContent = formatTime(audio.duration);
+    });
+
     // ═══════════════════════════════════════════════════════════
-    // FILE UPLOAD
+    // ✅ HOST DELAY CONTROL (±2500ms)
     // ═══════════════════════════════════════════════════════════
-    
+
+    document.getElementById('hostDelaySlider').addEventListener('input', (e) => {
+      hostDelay = parseInt(e.target.value, 10);
+      document.getElementById('hostDelayValue').textContent = hostDelay + ' ms';
+      socket.emit('set-host-delay', { roomCode, delay: hostDelay });
+    });
+
+    document.querySelectorAll('.host-delay .preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const delay = parseInt(btn.getAttribute('data-delay'), 10);
+        document.getElementById('hostDelaySlider').value = delay;
+        hostDelay = delay;
+        document.getElementById('hostDelayValue').textContent = delay + ' ms';
+        socket.emit('set-host-delay', { roomCode, delay });
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // ✅ FAST FILE UPLOAD (XMLHttpRequest with progress)
+    // ═══════════════════════════════════════════════════════════
+
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
-    
-    uploadArea.addEventListener('click', () => fileInput.click());
-    
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadProgressFill = document.getElementById('uploadProgressFill');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    uploadArea.addEventListener('click', () => {
+      if (!isUploading) fileInput.click();
+    });
+
     uploadArea.addEventListener('dragover', (e) => {
       e.preventDefault();
       uploadArea.classList.add('dragover');
     });
-    
+
     uploadArea.addEventListener('dragleave', () => {
       uploadArea.classList.remove('dragover');
     });
-    
+
     uploadArea.addEventListener('drop', (e) => {
       e.preventDefault();
       uploadArea.classList.remove('dragover');
-      
+
       if (e.dataTransfer.files.length > 0) {
         handleFileUpload(e.dataTransfer.files[0]);
       }
     });
-    
+
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
         handleFileUpload(e.target.files[0]);
       }
     });
-    
-    async function handleFileUpload(file) {
-      if (!file.type.startsWith('audio/')) {
-        alert('Please select an audio file');
+
+    function handleFileUpload(file) {
+      if (isUploading) return;
+
+      // Validate file type
+      const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/mp4', 'audio/x-m4a'];
+      if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp3|m4a|wav|aac)$/i)) {
+        alert('Please select an audio file (MP3, M4A, WAV, AAC)');
         return;
       }
-      
-      if (file.size > 100 * 1024 * 1024) {
-        alert('File too large. Maximum size is 100MB');
+
+      // Validate file size
+      if (file.size > 50 * 1024 * 1024) {
+        alert('File too large. Maximum size is 50MB.');
         return;
       }
-      
+
       console.log('📤 Uploading:', file.name);
-      showLoading('Uploading audio file...');
-      
+
+      isUploading = true;
+      uploadArea.classList.add('uploading');
+      uploadProgress.classList.add('active');
+      uploadProgressFill.style.width = '0%';
+      uploadStatus.textContent = 'Uploading... 0%';
+
       const formData = new FormData();
       formData.append('audio', file);
       formData.append('roomCode', roomCode);
-      
-      try {
-        const response = await fetch('/upload', {
-          method: 'POST',
-          body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          console.log('✅ Upload successful');
-          hideLoading();
-          hasAudioFile = true;
-        } else {
-          throw new Error(result.error || 'Upload failed');
+
+      const xhr = new XMLHttpRequest();
+
+      // Upload progress
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          uploadProgressFill.style.width = percent + '%';
+          uploadStatus.textContent = `Uploading... ${percent}%`;
         }
-        
-      } catch (err) {
-        console.error('❌ Upload error:', err);
-        hideLoading();
-        alert('Upload failed: ' + err.message);
-      }
+      });
+
+      // Upload complete
+      xhr.addEventListener('load', () => {
+        isUploading = false;
+        uploadArea.classList.remove('uploading');
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+
+            if (response.ok) {
+              console.log('✅ Upload successful');
+              uploadStatus.textContent = 'Upload complete!';
+
+              setTimeout(() => {
+                uploadProgress.classList.remove('active');
+              }, 2000);
+
+              hasAudioFile = true;
+              updateControlButtons();
+            } else {
+              throw new Error(response.error || 'Upload failed');
+            }
+          } catch (err) {
+            console.error('❌ Upload error:', err);
+            alert('Upload failed: ' + err.message);
+            uploadProgress.classList.remove('active');
+          }
+        } else {
+          alert('Upload failed with status: ' + xhr.status);
+          uploadProgress.classList.remove('active');
+        }
+      });
+
+      // Upload error
+      xhr.addEventListener('error', () => {
+        isUploading = false;
+        uploadArea.classList.remove('uploading');
+        uploadProgress.classList.remove('active');
+        alert('Network error during upload');
+      });
+
+      // Upload timeout
+      xhr.timeout = 120000; // 2 minutes
+      xhr.addEventListener('timeout', () => {
+        isUploading = false;
+        uploadArea.classList.remove('uploading');
+        uploadProgress.classList.remove('active');
+        alert('Upload timed out. Please try again.');
+      });
+
+      xhr.open('POST', '/upload');
+      xhr.send(formData);
     }
-    
+
     // ═══════════════════════════════════════════════════════════
     // SOCKET EVENTS
     // ═══════════════════════════════════════════════════════════
-    
+
     socket.on('file:ready', ({ url, metadata }) => {
       console.log('📥 New file ready');
+
       audio.src = url;
       document.getElementById('trackTitle').textContent = metadata.title;
       document.getElementById('trackArtist').textContent = metadata.artist;
+
       hasAudioFile = true;
-      
+      updateControlButtons();
+
       audio.addEventListener('canplaythrough', () => {
-        console.log('✅ Audio loaded');
+        console.log('✅ Audio loaded and ready');
         document.getElementById('duration').textContent = formatTime(audio.duration);
       }, { once: true });
     });
-    
+
     socket.on('sync:play', (data) => {
       isPlaying = true;
-      updatePlayButton();
     });
-    
+
     socket.on('sync:pause', (data) => {
       isPlaying = false;
-      updatePlayButton();
     });
-    
+
     socket.on('sync:stop', (data) => {
       isPlaying = false;
-      updatePlayButton();
     });
-    
+
     // ═══════════════════════════════════════════════════════════
-    // LISTENER LIST
+    // ✅ LISTENERS LIST
     // ═══════════════════════════════════════════════════════════
-    
+
     socket.on('listener-list', (listeners) => {
       console.log('👥 Listener list updated:', listeners.length);
-      
+
       document.getElementById('listenerCount').textContent = listeners.length;
-      
-      const container = document.getElementById('listenersList');
-      
+
+      const container = document.getElementById('listenersContainer');
+
       if (listeners.length === 0) {
         container.innerHTML = `
           <div class="empty-listeners">
-            <div class="empty-listeners-icon">👂</div>
-            <div>No listeners yet</div>
-            <div style="font-size: 0.9em; margin-top: 10px;">Share the room code with friends!</div>
+            <div class="empty-icon">👂</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">No listeners yet</div>
+            <div style="font-size: 0.85rem; opacity: 0.8;">Share the room code with friends!</div>
           </div>
         `;
         return;
       }
-      
-      container.innerHTML = listeners.map(listener => createListenerCard(listener)).join('');
-      
+
+      const html = listeners.map(listener => createListenerCard(listener)).join('');
+      container.innerHTML = html;
+
       // Attach event listeners
-      listeners.forEach(listener => {
-        attachListenerControls(listener.id);
-      });
+      listeners.forEach(listener => attachListenerControls(listener.id));
     });
-    
+
     function createListenerCard(listener) {
       const statusClass = listener.synced ? 'synced' : 'loading';
       const statusText = listener.synced ? '✓ Synced' : '⏳ Loading';
-      
+
       return `
         <div class="listener-card">
-          <div class="listener-header">
+          <div class="listener-top">
             <div class="listener-name">
               👤 ${escapeHtml(listener.name)}
             </div>
-            <div class="listener-status">
-              <span class="status-badge ${statusClass}">${statusText}</span>
-            </div>
+            <div class="status-badge ${statusClass}">${statusText}</div>
           </div>
-          
+
           <div class="listener-stats">
-            <div class="stat-box">
+            <div class="stat-item">
               <div class="stat-label">Ping</div>
-              <div class="stat-value">${listener.ping || 0}ms</div>
+              <div class="stat-value">${listener.ping}ms</div>
             </div>
-            <div class="stat-box">
+            <div class="stat-item">
               <div class="stat-label">Offset</div>
-              <div class="stat-value">${listener.clockOffset ? listener.clockOffset.toFixed(0) : 0}ms</div>
+              <div class="stat-value">${Math.round(listener.clockOffset)}ms</div>
             </div>
-            <div class="stat-box">
+            <div class="stat-item">
               <div class="stat-label">Accuracy</div>
-              <div class="stat-value">${listener.syncAccuracy || '—'}</div>
+              <div class="stat-value">${listener.syncAccuracy}</div>
             </div>
           </div>
-          
-          <!-- ✅ DELAY CONTROL (MAIN FEATURE) -->
-          <div class="delay-control">
-            <div class="delay-control-header">
-              <div class="delay-label">
-                ⏱️ Delay Adjustment
-              </div>
-              <div class="delay-value" id="delay-value-${listener.id}">
-                ${listener.manualDelay || 0} ms
-              </div>
+
+          <!-- ✅ LISTENER DELAY CONTROL (±2500ms) -->
+          <div class="listener-delay">
+            <div class="delay-header">
+              <div class="delay-label">⏱️ Delay Adjustment</div>
+              <div class="delay-value" id="delay-value-${listener.id}">${listener.manualDelay} ms</div>
             </div>
-            <input 
-              type="range" 
-              class="delay-slider" 
+            <input
+              type="range"
+              class="delay-slider"
               id="delay-${listener.id}"
-              min="-2000" 
-              max="2000" 
-              value="${listener.manualDelay || 0}" 
+              min="-2500"
+              max="2500"
+              value="${listener.manualDelay}"
               step="10"
-            >
+            />
             <div class="delay-presets">
               <button class="preset-btn" data-listener="${listener.id}" data-delay="-100">-100ms</button>
               <button class="preset-btn" data-listener="${listener.id}" data-delay="0">Reset</button>
               <button class="preset-btn" data-listener="${listener.id}" data-delay="100">+100ms</button>
             </div>
           </div>
-          
+
           <!-- Volume Control -->
           <div class="volume-control">
             <div class="volume-header">
-              <div class="volume-label">🔊 Volume</div>
-              <div class="volume-value" id="volume-value-${listener.id}">
-                ${Math.round(listener.volume * 100)}%
-              </div>
+              <span>🔊 Volume</span>
+              <span class="volume-value" id="volume-value-${listener.id}">${Math.round(listener.volume * 100)}%</span>
             </div>
-            <input 
-              type="range" 
+            <input
+              type="range"
               id="volume-${listener.id}"
-              min="0" 
-              max="100" 
-              value="${listener.volume * 100}" 
+              min="0"
+              max="100"
+              value="${listener.volume * 100}"
               step="1"
-            >
+            />
           </div>
-          
+
           <!-- Actions -->
           <div class="listener-actions">
             <button class="action-btn ${listener.muted ? 'unmute' : 'mute'}" id="mute-${listener.id}">
@@ -990,39 +1243,41 @@
         </div>
       `;
     }
-    
+
     function attachListenerControls(listenerId) {
       // Delay slider
       const delaySlider = document.getElementById(`delay-${listenerId}`);
       if (delaySlider) {
         delaySlider.addEventListener('input', (e) => {
-          const delay = parseInt(e.target.value);
-          document.getElementById(`delay-value-${listenerId}`).textContent = `${delay} ms`;
+          const delay = parseInt(e.target.value, 10);
+          document.getElementById(`delay-value-${listenerId}`).textContent = delay + ' ms';
           socket.emit('set-listener-delay', { roomCode, listenerId, delay });
         });
       }
-      
+
       // Delay presets
       document.querySelectorAll(`.preset-btn[data-listener="${listenerId}"]`).forEach(btn => {
         btn.addEventListener('click', () => {
-          const delay = parseInt(btn.dataset.delay);
+          const delay = parseInt(btn.getAttribute('data-delay'), 10);
           const slider = document.getElementById(`delay-${listenerId}`);
-          slider.value = delay;
-          document.getElementById(`delay-value-${listenerId}`).textContent = `${delay} ms`;
-          socket.emit('set-listener-delay', { roomCode, listenerId, delay });
+          if (slider) {
+            slider.value = delay;
+            document.getElementById(`delay-value-${listenerId}`).textContent = delay + ' ms';
+            socket.emit('set-listener-delay', { roomCode, listenerId, delay });
+          }
         });
       });
-      
+
       // Volume slider
       const volumeSlider = document.getElementById(`volume-${listenerId}`);
       if (volumeSlider) {
         volumeSlider.addEventListener('input', (e) => {
-          const volume = parseInt(e.target.value) / 100;
-          document.getElementById(`volume-value-${listenerId}`).textContent = `${Math.round(volume * 100)}%`;
+          const volume = parseInt(e.target.value, 10) / 100;
+          document.getElementById(`volume-value-${listenerId}`).textContent = Math.round(volume * 100) + '%';
           socket.emit('set-listener-volume', { roomCode, listenerId, volume });
         });
       }
-      
+
       // Mute button
       const muteBtn = document.getElementById(`mute-${listenerId}`);
       if (muteBtn) {
@@ -1032,18 +1287,22 @@
         });
       }
     }
-    
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
-    
+
     socket.on('room-closed', () => {
       alert('Room has been closed');
       window.location.href = '/';
     });
-    
+
+    socket.on('disconnect', () => {
+      console.log('❌ Disconnected from server');
+    });
+
     console.log('🎙️ Host panel initialized');
   </script>
 </body>
