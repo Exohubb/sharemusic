@@ -7,9 +7,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fetch from 'node-fetch';
 
 // ✅ FIX: Disable global fetch for Appwrite compatibility
-delete global.fetch;
+if (global.fetch) {
+  console.log('⚠️  Disabling global fetch for Appwrite compatibility');
+  delete global.fetch;
+}
 
 dotenv.config();
 
@@ -33,7 +37,7 @@ const BUCKET_ID = process.env.APPWRITE_BUCKET_ID;
 console.log('\n🔧 Checking Appwrite Configuration...');
 console.log('   Endpoint:', process.env.APPWRITE_ENDPOINT);
 console.log('   Project ID:', process.env.APPWRITE_PROJECT_ID);
-console.log('   API Key:', process.env.APPWRITE_API_KEY ? '✅ Set' : '❌ MISSING');
+console.log('   API Key:', process.env.APPWRITE_API_KEY ? `✅ Set (${process.env.APPWRITE_API_KEY.substring(0, 20)}...)` : '❌ MISSING');
 console.log('   Bucket ID:', BUCKET_ID || '❌ MISSING');
 
 if (!BUCKET_ID || !process.env.APPWRITE_PROJECT_ID || !process.env.APPWRITE_API_KEY) {
@@ -136,9 +140,9 @@ async function deleteRoom(roomCode) {
   if (room.audioFileId) {
     try {
       await storage.deleteFile(BUCKET_ID, room.audioFileId);
-      console.log('   Deleted Appwrite file:', room.audioFileId);
+      console.log('   ✅ Deleted Appwrite file:', room.audioFileId);
     } catch (err) {
-      console.error('   Error deleting file:', err.message);
+      console.error('   ⚠️ Error deleting file:', err.message);
     }
   }
   
@@ -525,45 +529,65 @@ io.on('connection', (socket) => {
 });
 
 // ═══════════════════════════════════════════════════════════
-// ✅ FILE UPLOAD (USING DIRECT APPWRITE URL)
+// ✅ FILE UPLOAD WITH ADVANCED ERROR HANDLING
 // ═══════════════════════════════════════════════════════════
 
 app.post('/upload', upload.single('audio'), async (req, res) => {
+  const startTime = Date.now();
+  
   try {
     const roomCode = req.body.roomCode;
     const room = rooms.get(roomCode);
     
+    console.log('\n═══════════════════════════════════════════');
+    console.log('📤 UPLOAD REQUEST RECEIVED');
+    console.log('═══════════════════════════════════════════');
+    console.log('Room Code:', roomCode);
+    console.log('Room exists:', !!room);
+    
     if (!room) {
+      console.error('❌ Room not found:', roomCode);
       return res.status(404).json({ error: 'Room not found' });
     }
 
     if (!req.file) {
+      console.error('❌ No file in request');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    console.log(`📤 Uploading to Appwrite: ${req.file.originalname}`);
-    console.log(`   Bucket ID: ${BUCKET_ID}`);
-    console.log(`   File size: ${(req.file.size / 1024 / 1024).toFixed(2)} MB`);
+    console.log('File Details:');
+    console.log('  - Name:', req.file.originalname);
+    console.log('  - Size:', (req.file.size / 1024 / 1024).toFixed(2), 'MB');
+    console.log('  - MIME:', req.file.mimetype);
+    console.log('  - Buffer:', req.file.buffer ? 'Present' : 'Missing');
 
     // Delete old file if exists
     if (room.audioFileId) {
       try {
+        console.log('🗑️ Deleting old file:', room.audioFileId);
         await storage.deleteFile(BUCKET_ID, room.audioFileId);
-        console.log('   ✅ Deleted old file');
+        console.log('   ✅ Old file deleted');
       } catch (err) {
-        console.warn('   ⚠️  Could not delete old file');
+        console.warn('   ⚠️  Could not delete old file:', err.message);
       }
     }
 
     // Upload to Appwrite
+    console.log('\n📡 UPLOADING TO APPWRITE');
+    console.log('  - Endpoint:', process.env.APPWRITE_ENDPOINT);
+    console.log('  - Project:', process.env.APPWRITE_PROJECT_ID);
+    console.log('  - Bucket:', BUCKET_ID);
+    
     const fileId = ID.unique();
+    console.log('  - Generated File ID:', fileId);
+    
     const inputFile = InputFile.fromBuffer(
       req.file.buffer,
       req.file.originalname
     );
 
-    console.log('   📡 Uploading to Appwrite...');
-
+    const uploadStartTime = Date.now();
+    
     const uploadedFile = await storage.createFile(
       BUCKET_ID,
       fileId,
@@ -571,14 +595,43 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       [Permission.read(Role.any())]
     );
 
-    console.log('   ✅ File uploaded successfully');
-    console.log('   📝 File ID:', uploadedFile.$id);
+    const uploadDuration = Date.now() - uploadStartTime;
+    console.log('\n✅ APPWRITE UPLOAD SUCCESS');
+    console.log('  - Duration:', uploadDuration, 'ms');
+    console.log('  - File ID:', uploadedFile.$id);
+    console.log('  - Size:', uploadedFile.sizeOriginal, 'bytes');
 
     const actualFileId = uploadedFile.$id;
     
-    // ✅ USE DIRECT DOWNLOAD URL (Works with CORS when domain is added to Appwrite)
+    // Generate download URL
     const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${actualFileId}/download?project=${process.env.APPWRITE_PROJECT_ID}`;
+    
+    console.log('\n🌐 GENERATED DOWNLOAD URL:');
+    console.log(fileUrl);
+    
+    // Test if URL is accessible
+    console.log('\n🧪 TESTING URL ACCESSIBILITY...');
+    try {
+      const testResponse = await fetch(fileUrl, {
+        method: 'HEAD',
+        headers: {
+          'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
+          'X-Appwrite-Key': process.env.APPWRITE_API_KEY
+        }
+      });
+      console.log('  - Status:', testResponse.status, testResponse.statusText);
+      console.log('  - Headers:', Object.fromEntries(testResponse.headers.entries()));
+      
+      if (testResponse.ok) {
+        console.log('✅ URL is accessible');
+      } else {
+        console.error('⚠️  URL returned non-200 status');
+      }
+    } catch (testErr) {
+      console.error('❌ URL test failed:', testErr.message);
+    }
 
+    // Update room
     room.audioFileId = actualFileId;
     room.audioUrl = fileUrl;
     room.metadata = {
@@ -587,35 +640,169 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
       duration: 0
     };
 
-    console.log('   🌐 Download URL:', fileUrl);
+    console.log('\n✅ ROOM UPDATED');
+    console.log('  - Audio File ID:', room.audioFileId);
+    console.log('  - Audio URL:', room.audioUrl);
+    console.log('  - Metadata:', room.metadata);
 
-    // Notify all clients
+    // Notify clients
+    console.log('\n📢 BROADCASTING TO CLIENTS');
     io.to(roomCode).emit('file:ready', { 
       url: room.audioUrl,
       metadata: room.metadata 
     });
+    console.log('  - Emitted file:ready to room:', roomCode);
+
+    broadcastRoomState(roomCode);
+    broadcastRoomList();
+
+    const totalDuration = Date.now() - startTime;
+    console.log('\n✅ UPLOAD COMPLETE');
+    console.log('  - Total Duration:', totalDuration, 'ms');
+    console.log('═══════════════════════════════════════════\n');
 
     res.json({ 
       success: true,
       metadata: room.metadata,
       audioUrl: room.audioUrl,
-      fileId: actualFileId
+      fileId: actualFileId,
+      uploadTime: totalDuration
     });
-
-    broadcastRoomState(roomCode);
-    broadcastRoomList();
-
-    console.log('   ✅ Upload complete!\n');
 
   } catch (err) {
-    console.error('❌ Upload error:', err);
-    console.error('   Details:', err.message);
-    console.error('   Type:', err.type);
+    const totalDuration = Date.now() - startTime;
+    
+    console.error('\n❌ UPLOAD ERROR');
+    console.error('═══════════════════════════════════════════');
+    console.error('Error Name:', err.name);
+    console.error('Error Message:', err.message);
+    console.error('Error Code:', err.code);
+    console.error('Error Type:', err.type);
+    console.error('Error Stack:', err.stack);
+    
+    if (err.response) {
+      console.error('Response:', err.response);
+      if (Buffer.isBuffer(err.response)) {
+        console.error('Response (decoded):', err.response.toString());
+      }
+    }
+    
+    console.error('Duration before error:', totalDuration, 'ms');
+    console.error('═══════════════════════════════════════════\n');
+    
     res.status(500).json({ 
-      error: err.message,
-      type: err.type || 'Unknown error'
+      error: err.message || 'Upload failed',
+      type: err.type || 'Unknown',
+      code: err.code,
+      details: err.response ? err.response.toString() : null
     });
   }
+});
+
+// ═══════════════════════════════════════════════════════════
+// PROXY ENDPOINT WITH ADVANCED ERROR HANDLING
+// ═══════════════════════════════════════════════════════════
+
+app.get('/audio/:roomCode', async (req, res) => {
+  const startTime = Date.now();
+  
+  try {
+    const roomCode = req.params.roomCode;
+    const room = rooms.get(roomCode);
+    
+    console.log('\n═══════════════════════════════════════════');
+    console.log('📡 AUDIO PROXY REQUEST');
+    console.log('═══════════════════════════════════════════');
+    console.log('Room Code:', roomCode);
+    console.log('Room exists:', !!room);
+    console.log('Audio File ID:', room?.audioFileId);
+    console.log('Request Headers:', req.headers);
+    
+    if (!room || !room.audioFileId) {
+      console.error('❌ Audio not found');
+      console.error('═══════════════════════════════════════════\n');
+      return res.status(404).json({ error: 'Audio not found' });
+    }
+
+    console.log('\n📥 FETCHING FROM APPWRITE');
+    console.log('  - Method: Using node-fetch directly');
+    console.log('  - Bucket:', BUCKET_ID);
+    console.log('  - File ID:', room.audioFileId);
+
+    // Use node-fetch to download from Appwrite
+    const downloadUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${room.audioFileId}/download?project=${process.env.APPWRITE_PROJECT_ID}`;
+    
+    console.log('  - URL:', downloadUrl);
+    
+    const downloadStartTime = Date.now();
+    
+    const response = await fetch(downloadUrl, {
+      headers: {
+        'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID,
+        'X-Appwrite-Key': process.env.APPWRITE_API_KEY
+      }
+    });
+
+    const downloadDuration = Date.now() - downloadStartTime;
+    
+    console.log('\n📡 APPWRITE RESPONSE');
+    console.log('  - Status:', response.status, response.statusText);
+    console.log('  - Content-Type:', response.headers.get('content-type'));
+    console.log('  - Content-Length:', response.headers.get('content-length'));
+    console.log('  - Duration:', downloadDuration, 'ms');
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Appwrite returned error');
+      console.error('  - Response:', errorText);
+      throw new Error(`Appwrite error: ${response.status} - ${errorText}`);
+    }
+
+    const buffer = await response.buffer();
+    console.log('  - Buffer size:', buffer.length, 'bytes');
+
+    // Set headers
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'audio/mpeg');
+    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+
+    res.send(buffer);
+
+    const totalDuration = Date.now() - startTime;
+    console.log('\n✅ PROXY COMPLETE');
+    console.log('  - Total Duration:', totalDuration, 'ms');
+    console.log('═══════════════════════════════════════════\n');
+
+  } catch (err) {
+    const totalDuration = Date.now() - startTime;
+    
+    console.error('\n❌ PROXY ERROR');
+    console.error('═══════════════════════════════════════════');
+    console.error('Error Name:', err.name);
+    console.error('Error Message:', err.message);
+    console.error('Error Code:', err.code);
+    console.error('Error Type:', err.type);
+    console.error('Error Stack:', err.stack);
+    console.error('Duration before error:', totalDuration, 'ms');
+    console.error('═══════════════════════════════════════════\n');
+    
+    res.status(500).json({ 
+      error: 'Failed to load audio',
+      details: err.message 
+    });
+  }
+});
+
+// Handle OPTIONS for CORS preflight
+app.options('/audio/:roomCode', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+  res.sendStatus(200);
 });
 
 // Health check
@@ -624,7 +811,9 @@ app.get('/health', (req, res) => {
     status: 'ok', 
     timestamp: Date.now(),
     appwrite: !!BUCKET_ID,
-    rooms: rooms.size
+    rooms: rooms.size,
+    nodeVersion: process.version,
+    platform: process.platform
   });
 });
 
@@ -641,6 +830,7 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`   🌐 Port: ${PORT}`);
   console.log(`   📦 Storage: Appwrite (${BUCKET_ID})`);
   console.log(`   🎯 NTP Sync: Enabled`);
+  console.log(`   🔧 Node: ${process.version}`);
   console.log('════════════════════════════════════════\n');
 });
 
