@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>Host Panel – Music Sync</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+      min-height: 100vh;
+      color: #f9fafb;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-left h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-left .subtitle {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .room-code-display {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.3));
+      border: 2px solid rgba(74, 222, 128, 0.6);
+      border-radius: 14px;
+      padding: 12px 24px;
+      text-align: center;
+    }
+
+    .room-code-display .label {
+      font-size: 0.75rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .room-code-display .code {
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      color: #4ade80;
+      text-shadow: 0 2px 10px rgba(74, 222, 128, 0.5);
+    }
+
+    /* Grid Layout - FIXED */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 1200px) {
+      .content-grid {
+        grid-template-columns: 550px 1fr;
+      }
+    }
+
+    /* Panel */
+    .panel {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    /* Track Info */
+    .track-info {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 16px;
+      text-align: center;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .track-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .track-artist {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+      margin: 16px 0 10px;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #10b981);
+      border-radius: 999px;
+      transition: width 0.1s linear;
+    }
+
+    .time-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      opacity: 0.8;
+      margin-bottom: 16px;
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .control-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(148, 163, 184, 0.25);
+      color: #f9fafb;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn:hover {
+      background: rgba(148, 163, 184, 0.4);
+      transform: scale(1.05);
+    }
+
+    .control-btn:active {
+      transform: scale(0.98);
+    }
+
+    .control-btn.play {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #22c55e, #10b981);
+      font-size: 2rem;
+      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.5);
+    }
+
+    .control-btn.play:hover {
+      box-shadow: 0 12px 32px rgba(34, 197, 94, 0.7);
+    }
+
+    .control-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Upload Area */
+    .upload-area {
+      border: 2px dashed rgba(148, 163, 184, 0.5);
+      border-radius: 14px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 16px;
+    }
+
+    .upload-area:hover:not(.uploading) {
+      border-color: #4ade80;
+      background: rgba(74, 222, 128, 0.1);
+    }
+
+    .upload-area.uploading {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.1);
+      cursor: wait;
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .upload-text {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .upload-hint {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-progress {
+      margin-top: 14px;
+      display: none;
+    }
+
+    .upload-progress.active {
+      display: block;
+    }
+
+    .upload-progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .upload-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+
+    .upload-status {
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    /* Host Delay */
+    .host-delay {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.2));
+      border: 2px solid rgba(129, 140, 248, 0.5);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 16px;
+    }
+
+    .delay-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .delay-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .delay-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #a5b4fc;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 999px;
+      outline: none;
+      -webkit-appearance: none;
+      margin: 8px 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #a5b4fc;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(165, 180, 252, 0.5);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #a5b4fc;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px rgba(165, 180, 252, 0.5);
+    }
+
+    .delay-presets {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .preset-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      color: #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn:hover {
+      background: rgba(79, 70, 229, 0.3);
+      border-color: #a5b4fc;
+      transform: translateY(-1px);
+    }
+
+    /* Listeners Panel - FIXED */
+    .listeners-panel {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      height: fit-content;
+    }
+
+    .listeners-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .listeners-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .listener-count {
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid rgba(74, 222, 128, 0.6);
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    .listeners-scroll {
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .listeners-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .listeners-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.6);
+      border-radius: 999px;
+    }
+
+    /* Listener Card */
+    .listener-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .listener-card:hover {
+      border-color: #4ade80;
+      box-shadow: 0 4px 16px rgba(74, 222, 128, 0.2);
+    }
+
+    .listener-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .listener-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .status-badge.synced {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.6);
+    }
+
+    .status-badge.loading {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(252, 211, 77, 0.6);
+    }
+
+    /* Stats Grid */
+    .listener-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-item {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-bottom: 3px;
+    }
+
+    .stat-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    /* Listener Delay */
+    .listener-delay {
+      background: rgba(74, 222, 128, 0.1);
+      border: 1.5px solid rgba(34, 197, 94, 0.4);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    /* Volume Control */
+    .volume-control {
+      margin-bottom: 12px;
+    }
+
+    .volume-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+    }
+
+    .volume-value {
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    /* Actions */
+    .listener-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn.mute {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .action-btn.unmute {
+      background: rgba(34, 197, 94, 0.25);
+      color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.5);
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .empty-listeners {
+      text-align: center;
+      padding: 40px 20px;
+      opacity: 0.7;
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+
+      .header {
+        padding: 16px;
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .room-code-display .code {
+        font-size: 2rem;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel, .listeners-panel {
+        padding: 20px;
+      }
+
+      .control-btn {
+        width: 50px;
+        height: 50px;
+      }
+
+      .control-btn.play {
+        width: 64px;
+        height: 64px;
+      }
+
+      .listener-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-left">
+        <h1 id="roomNameDisplay">🎙️ Music Sync Room</h1>
+        <div class="subtitle">Host Control Panel</div>
+      </div>
+      <div class="room-code-display">
+        <div class="label">🔑 Room Code</div>
+        <div class="code" id="roomCodeDisplay">----</div>
+      </div>
+    </header>
+
+    <div class="content-grid">
+      <!-- Player Panel -->
+      <div class="panel">
+        <div class="panel-title">🎵 Music Player</div>
+
+        <div class="track-info">
+          <div class="track-title" id="trackTitle">No track loaded</div>
+          <div class="track-artist" id="trackArtist">Upload a file to begin</div>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="time-display">
+          <span id="currentTime">0:00</span>
+          <span id="duration">0:00</span>
+        </div>
+
+        <div class="controls">
+          <button class="control-btn" id="stopBtn" title="Stop" disabled>⏹️</button>
+          <button class="control-btn play" id="playBtn" title="Play" disabled>▶️</button>
+          <button class="control-btn" id="pauseBtn" title="Pause" disabled>⏸️</button>
+        </div>
+
+        <!-- Host Delay -->
+        <div class="host-delay">
+          <div class="delay-header">
+            <div class="delay-label">⏱️ Host Delay Control</div>
+            <div class="delay-value" id="hostDelayValue">0 ms</div>
+          </div>
+          <input type="range" id="hostDelaySlider" min="-2500" max="2500" value="0" step="10" />
+          <div class="delay-presets">
+            <button class="preset-btn" data-delay="-100">-100ms</button>
+            <button class="preset-btn" data-delay="0">Reset</button>
+            <button class="preset-btn" data-delay="100">+100ms</button>
+          </div>
+        </div>
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-icon">📁</div>
+          <div class="upload-text">Click or drag audio file</div>
+          <div class="upload-hint">MP3, M4A, WAV (Max 50MB) • Supabase Storage</div>
+          <input type="file" id="fileInput" accept="audio/*" />
+        </div>
+
+        <div class="upload-progress" id="uploadProgress">
+          <div class="upload-progress-bar">
+            <div class="upload-progress-fill" id="uploadProgressFill"></div>
+          </div>
+          <div class="upload-status" id="uploadStatus">Uploading...</div>
+        </div>
+      </div>
+
+      <!-- Listeners Panel -->
+      <div class="listeners-panel">
+        <div class="listeners-header">
+          <div class="listeners-title">👥 Listeners</div>
+          <div class="listener-count" id="listenerCount">0</div>
+        </div>
+
+        <div class="listeners-scroll" id="listenersContainer">
+          <div class="empty-listeners">
+            <div class="empty-icon">👂</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">No listeners yet</div>
+            <div style="font-size: 0.85rem; opacity: 0.8;">Share the room code with friends!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="audioPlayer" preload="auto"></audio>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io({ transports: ['websocket', 'polling'], reconnection: true });
+
+    const audio = document.getElementById('audioPlayer');
+    const roomCode = new URLSearchParams(window.location.search).get('room');
+
+    if (!roomCode) {
+      alert('No room code provided');
+      window.location.href = '/';
+    }
+
+    document.getElementById('roomCodeDisplay').textContent = roomCode;
+
+    let isPlaying = false;
+    let hasAudioFile = false;
+    let hostDelay = 0;
+    let isUploading = false;
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || !isFinite(seconds)) return '0:00';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateControlButtons() {
+      document.getElementById('playBtn').disabled = !hasAudioFile;
+      document.getElementById('pauseBtn').disabled = !hasAudioFile;
+      document.getElementById('stopBtn').disabled = !hasAudioFile;
+    }
+
+    socket.on('connect', () => {
+      console.log('✅ Connected');
+
+      socket.emit('join-as-host', { roomCode }, (response) => {
+        if (!response || !response.success) {
+          alert(response?.error || 'Failed to join');
+          window.location.href = '/';
+          return;
+        }
+
+        console.log('✅ Joined as host');
+
+        if (response.roomState.roomName) {
+          document.getElementById('roomNameDisplay').textContent = '🎙️ ' + response.roomState.roomName;
+        }
+
+        if (response.roomState.hasFile) {
+          hasAudioFile = true;
+          audio.src = response.roomState.audioUrl;
+          document.getElementById('trackTitle').textContent = response.roomState.metadata.title;
+          document.getElementById('trackArtist').textContent = response.roomState.metadata.artist;
+          updateControlButtons();
+        }
+
+        if (response.roomState.hostDelay) {
+          hostDelay = response.roomState.hostDelay;
+          document.getElementById('hostDelaySlider').value = hostDelay;
+          document.getElementById('hostDelayValue').textContent = hostDelay + ' ms';
+        }
+
+        isPlaying = response.roomState.playing;
+      });
+    });
+
+    // Playback Controls
+    document.getElementById('playBtn').addEventListener('click', () => {
+      if (!hasAudioFile) return;
+      const position = Math.floor(audio.currentTime * 1000);
+      socket.emit('play', { roomCode, position });
+      audio.play().catch(err => console.error('Play error:', err));
+      isPlaying = true;
+    });
+
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+      socket.emit('pause', { roomCode });
+      audio.pause();
+      isPlaying = false;
+    });
+
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      socket.emit('stop', { roomCode });
+      audio.pause();
+      audio.currentTime = 0;
+      isPlaying = false;
+    });
+
+    document.getElementById('progressBar').addEventListener('click', (e) => {
+      if (!hasAudioFile || !audio.duration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const percent = (e.clientX - rect.left) / rect.width;
+      const position = Math.floor(percent * audio.duration * 1000);
+      socket.emit('seek', { roomCode, position });
+      audio.currentTime = position / 1000;
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      if (!isNaN(audio.duration) && audio.duration > 0) {
+        const progress = (audio.currentTime / audio.duration) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+        document.getElementById('currentTime').textContent = formatTime(audio.currentTime);
+      }
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+      document.getElementById('duration').textContent = formatTime(audio.duration);
+    });
+
+    // Host Delay Control
+    document.getElementById('hostDelaySlider').addEventListener('input', (e) => {
+      hostDelay = parseInt(e.target.value, 10);
+      document.getElementById('hostDelayValue').textContent = hostDelay + ' ms';
+      socket.emit('set-host-delay', { roomCode, delay: hostDelay });
+    });
+
+    document.querySelectorAll('.host-delay .preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const delay = parseInt(btn.getAttribute('data-delay'), 10);
+        document.getElementById('hostDelaySlider').value = delay;
+        hostDelay = delay;
+        document.getElementById('hostDelayValue').textContent = delay + ' ms';
+        socket.emit('set-host-delay', { roomCode, delay });
+      });
+    });
+
+    // ✅ FAST SUPABASE UPLOAD
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadProgressFill = document.getElementById('uploadProgressFill');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    uploadArea.addEventListener('click', () => {
+      if (!isUploading) fileInput.click();
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) {
+        handleFileUpload(e.dataTransfer.files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileUpload(e.target.files[0]);
+      }
+    });
+
+    function handleFileUpload(file) {
+      if (isUploading) return;
+
+      const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/mp4', 'audio/x-m4a'];
+      if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp3|m4a|wav|aac)$/i)) {
+        alert('Please select an audio file (MP3, M4A, WAV, AAC)');
+        return;
+      }
+
+      if (file.size > 50 * 1024 * 1024) {
+        alert('File too large. Maximum size is 50MB.');
+        return;
+      }
+
+      console.log('📤 Uploading:', file.name);
+
+      isUploading = true;
+      uploadArea.classList.add('uploading');
+      uploadProgress.classList.add('active');
+      uploadProgressFill.style.width = '0%';
+      uploadStatus.textContent = 'Uploading to Supabase... 0%';
+
+      const formData = new FormData();
+      formData.append('audio', file);
+      formData.append('roomCode', roomCode);
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          uploadProgressFill.style.width = percent + '%';
+          uploadStatus.textContent = `Uploading to Supabase... ${percent}%`;
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        isUploading = false;
+        uploadArea.classList.remove('uploading');
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+
+            if (response.ok) {
+              console.log('✅ Upload successful');
+              uploadStatus.textContent = 'Upload complete!';
+
+              setTimeout(() => {
+                uploadProgress.classList.remove('active');
+              }, 2000);
+
+              hasAudioFile = true;
+              updateControlButtons();
+            } else {
+              throw new Error(response.error || 'Upload failed');
+            }
+          } catch (err) {
+            console.error('❌ Upload error:', err);
+            alert('Upload failed: ' + err.message);
+            uploadProgress.classList.remove('active');
+          }
+        } else {
+          alert('Upload failed with status: ' + xhr.status);
+          uploadProgress.classList.remove('active');
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        isUploading = false;
+        uploadArea.classList.remove('uploading');
+        uploadProgress.classList.remove('active');
+        alert('Network error during upload');
+      });
+
+      xhr.timeout = 120000;
+      xhr.addEventListener('timeout', () => {
+        isUploading = false;
+        uploadArea.classList.remove('uploading');
+        uploadProgress.classList.remove('active');
+        alert('Upload timed out. Please try again.');
+      });
+
+      xhr.open('POST', '/upload');
+      xhr.send(formData);
+    }
+
+    socket.on('file:ready', ({ url, metadata }) => {
+      console.log('📥 New file ready');
+      audio.src = url;
+      document.getElementById('trackTitle').textContent = metadata.title;
+      document.getElementById('trackArtist').textContent = metadata.artist;
+      hasAudioFile = true;
+      updateControlButtons();
+      audio.addEventListener('canplaythrough', () => {
+        document.getElementById('duration').textContent = formatTime(audio.duration);
+      }, { once: true });
+    });
+
+    // ✅ LISTENERS LIST (UPDATES SMOOTHLY)
+    socket.on('listener-list', (listeners) => {
+      console.log('👥 Listeners updated:', listeners.length);
+      document.getElementById('listenerCount').textContent = listeners.length;
+
+      const container = document.getElementById('listenersContainer');
+
+      if (listeners.length === 0) {
+        container.innerHTML = `
+          <div class="empty-listeners">
+            <div class="empty-icon">👂</div>
+            <div style="font-weight: 600; margin-bottom: 4px;">No listeners yet</div>
+            <div style="font-size: 0.85rem; opacity: 0.8;">Share the room code with friends!</div>
+          </div>
+        `;
+        return;
+      }
+
+      const html = listeners.map(l => createListenerCard(l)).join('');
+      container.innerHTML = html;
+
+      listeners.forEach(l => attachListenerControls(l.id));
+    });
+
+    function createListenerCard(l) {
+      const statusClass = l.synced ? 'synced' : 'loading';
+      const statusText = l.synced ? '✓ Synced' : '⏳ Loading';
+
+      return `
+        <div class="listener-card">
+          <div class="listener-top">
+            <div class="listener-name">👤 ${escapeHtml(l.name)}</div>
+            <div class="status-badge ${statusClass}">${statusText}</div>
+          </div>
+
+          <div class="listener-stats">
+            <div class="stat-item">
+              <div class="stat-label">Ping</div>
+              <div class="stat-value">${l.ping}ms</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Offset</div>
+              <div class="stat-value">${Math.round(l.clockOffset)}ms</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Accuracy</div>
+              <div class="stat-value">${l.syncAccuracy}</div>
+            </div>
+          </div>
+
+          <div class="listener-delay">
+            <div class="delay-header">
+              <div class="delay-label">⏱️ Delay</div>
+              <div class="delay-value" id="delay-value-${l.id}">${l.manualDelay} ms</div>
+            </div>
+            <input type="range" id="delay-${l.id}" min="-2500" max="2500" value="${l.manualDelay}" step="10" />
+            <div class="delay-presets">
+              <button class="preset-btn" data-listener="${l.id}" data-delay="-100">-100ms</button>
+              <button class="preset-btn" data-listener="${l.id}" data-delay="0">Reset</button>
+              <button class="preset-btn" data-listener="${l.id}" data-delay="100">+100ms</button>
+            </div>
+          </div>
+
+          <div class="volume-control">
+            <div class="volume-header">
+              <span>🔊 Volume</span>
+              <span class="volume-value" id="volume-value-${l.id}">${Math.round(l.volume * 100)}%</span>
+            </div>
+            <input type="range" id="volume-${l.id}" min="0" max="100" value="${l.volume * 100}" step="1" />
+          </div>
+
+          <div class="listener-actions">
+            <button class="action-btn ${l.muted ? 'unmute' : 'mute'}" id="mute-${l.id}">
+              ${l.muted ? '🔊 Unmute' : '🔇 Mute'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function attachListenerControls(listenerId) {
+      const delaySlider = document.getElementById(`delay-${listenerId}`);
+      if (delaySlider) {
+        delaySlider.addEventListener('input', (e) => {
+          const delay = parseInt(e.target.value, 10);
+          document.getElementById(`delay-value-${listenerId}`).textContent = delay + ' ms';
+          socket.emit('set-listener-delay', { roomCode, listenerId, delay });
+        });
+      }
+
+      document.querySelectorAll(`.preset-btn[data-listener="${listenerId}"]`).forEach(btn => {
+        btn.addEventListener('click', () => {
+          const delay = parseInt(btn.getAttribute('data-delay'), 10);
+          const slider = document.getElementById(`delay-${listenerId}`);
+          if (slider) {
+            slider.value = delay;
+            document.getElementById(`delay-value-${listenerId}`).textContent = delay + ' ms';
+            socket.emit('set-listener-delay', { roomCode, listenerId, delay });
+          }
+        });
+      });
+
+      const volumeSlider = document.getElementById(`volume-${listenerId}`);
+      if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+          const volume = parseInt(e.target.value, 10) / 100;
+          document.getElementById(`volume-value-${listenerId}`).textContent = Math.round(volume * 100) + '%';
+          socket.emit('set-listener-volume', { roomCode, listenerId, volume });
+        });
+      }
+
+      const muteBtn = document.getElementById(`mute-${listenerId}`);
+      if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+          const isMuted = muteBtn.classList.contains('mute');
+          socket.emit('mute-listener', { roomCode, listenerId, muted: isMuted });
+        });
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    socket.on('room-closed', () => {
+      alert('Room has been closed');
+      window.location.href = '/';
+    });
+
+    console.log('🎙️ Host panel initialized');
+  </script>
+</body>
+</html>

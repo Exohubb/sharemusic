@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: music-sync
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && node init-db.js
+    startCommand: node server.js
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NODE_ENV
+        value: production
